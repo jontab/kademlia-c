@@ -1,0 +1,64 @@
+#include <kademlia/contact.h>
+#include <kademlia/log.h>
+#include <kademlia/uint256.h>
+#include <stdarg.h>
+
+void kad_printf(const char *fmt, ...)
+{
+    va_list arg_list;
+    va_start(arg_list, fmt);
+    while (*fmt != '\0')
+    {
+        if (*fmt == '%')
+        {
+            fmt++;
+            switch (*fmt)
+            {
+            case 's': // char *.
+            {
+                char *sval = va_arg(arg_list, char *);
+                printf("%s", sval);
+                break;
+            }
+
+            case 'd': // int.
+            {
+                int ival = va_arg(arg_list, int);
+                printf("%d", ival);
+                break;
+            }
+
+            case 'U': // kad_uint256_t *.
+            {
+                kad_uint256_t *uval = va_arg(arg_list, kad_uint256_t *);
+                printf("0x");
+                for (int i = 0; i < sizeof(uval->d) / sizeof(uval->d[0]); i++)
+                {
+                    printf("%08x", uval->d[i]);
+                }
+
+                break;
+            }
+
+            case 'C': // kad_contact_t *.
+            {
+                kad_contact_t *cval = va_arg(arg_list, kad_contact_t *);
+                kad_printf("Contact\n");
+                kad_printf("  id:   %U\n", &cval->id);
+                kad_printf("  host: %s\n", cval->host);
+                kad_printf("  port: %s", cval->port);
+                break;
+            }
+            }
+
+            fmt++;
+        }
+        else
+        {
+            printf("%c", *fmt);
+            fmt++;
+        }
+    }
+
+    va_end(arg_list);
+}

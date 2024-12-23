@@ -28,11 +28,13 @@ add_executable(kademlia-tests
     src/contact.c
     src/log.c
     src/ordereddict.c
+    src/table.c
     src/uint256.c
     tests/main.c
     tests/munit.c
     tests/unit_bucket.c
     tests/unit_ordereddict.c
+    tests/unit_table.c
     tests/unit_uint256.c)
 
 # target_link_libraries(kademlia-tests

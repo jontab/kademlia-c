@@ -114,7 +114,8 @@ MunitResult unit_bucket_split(const MunitParameter params[], void *data)
     // Setup.
     kad_uint256_t lo = {0, 0, 0, 0, 0, 0, 0, 0};
     kad_uint256_t hi = {0, 0, 0, 0, 0, 0, 0, 0xffffffff};
-    kad_uint256_t mi = {0, 0, 0, 0, 0, 0, 0, 0x7fffffff};
+    kad_uint256_t ml = {0, 0, 0, 0, 0, 0, 0, 0x7fffffff};
+    kad_uint256_t mr = {0, 0, 0, 0, 0, 0, 0, 0x80000000};
     kad_bucket_t *b = kad_bucket_new(&lo, &hi, 8);
     kad_bucket_t *r = kad_bucket_new(NULL, NULL, 8);
 
@@ -135,8 +136,8 @@ MunitResult unit_bucket_split(const MunitParameter params[], void *data)
     // Execute.
     kad_bucket_split(b, r);
     munit_assert_int(kad_uint256_cmp(&b->range_lower, &lo), ==, 0);
-    munit_assert_int(kad_uint256_cmp(&b->range_upper, &mi), ==, 0);
-    munit_assert_int(kad_uint256_cmp(&r->range_lower, &mi), ==, 0);
+    munit_assert_int(kad_uint256_cmp(&b->range_upper, &ml), ==, 0);
+    munit_assert_int(kad_uint256_cmp(&r->range_lower, &mr), ==, 0);
     munit_assert_int(kad_uint256_cmp(&r->range_upper, &hi), ==, 0);
     munit_assert_int(b->contacts.size, ==, nids);
     munit_assert_int(r->contacts.size, ==, 0);

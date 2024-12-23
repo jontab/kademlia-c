@@ -23,7 +23,7 @@ jonab@MacBookPro kademlia-c % git submodule update --init --recursive --depth=1
 # Milestones
 
 - [x] Uint256, Contact, OrderedDict, and Bucket.
-- [ ] Routing table.
+- [x] Routing table (without protocol for replacing old peer).
 - [ ] Contact heap.
 - [ ] Crawler and contract crawler.
 - [ ] Protocol.

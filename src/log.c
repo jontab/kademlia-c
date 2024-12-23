@@ -1,5 +1,6 @@
 #include <kademlia/contact.h>
 #include <kademlia/log.h>
+#include <kademlia/table.h>
 #include <kademlia/uint256.h>
 #include <stdarg.h>
 
@@ -47,6 +48,48 @@ void kad_printf(const char *fmt, ...)
                 kad_printf("  id:   %U\n", &cval->id);
                 kad_printf("  host: %s\n", cval->host);
                 kad_printf("  port: %s", cval->port);
+                break;
+            }
+
+            case 'B': // kad_bucket_t *.
+            {
+                kad_bucket_t *bval = va_arg(arg_list, kad_bucket_t *);
+                kad_ordereddictnode_t *curr;
+
+                kad_printf("Contacts\n");
+                curr = bval->contacts.head;
+                while (curr)
+                {
+                    kad_printf("  id: %U\n", &curr->c);
+                    curr = curr->next;
+                }
+
+                kad_printf("Replacements:\n");
+                curr = bval->replacements.head;
+                while (curr)
+                {
+                    kad_printf("  id: %U\n", &curr->c);
+                    curr = curr->next;
+                }
+
+                break;
+            }
+
+            case 'T': // kad_table_t *.
+            {
+                kad_table_t *tval = va_arg(arg_list, kad_table_t *);
+                kad_printf("Table\n");
+                kad_printf("  id:       %U\n", &tval->id);
+                kad_printf("  capacity: %d\n", tval->capacity);
+                kad_printf("  nbuckets: %d\n", tval->nbuckets);
+                for (int i = 0; i < tval->nbuckets; i++)
+                {
+                    kad_printf("---------\n");
+                    kad_printf("Bucket %d\n", i);
+                    kad_printf("---------\n");
+                    kad_printf("%B", &tval->buckets[i]);
+                }
+
                 break;
             }
             }

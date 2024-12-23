@@ -3,24 +3,34 @@
 #include <kademlia/log.h>
 #include <stdlib.h>
 
-kad_bucket_t *kad_bucket_new(const kad_uint256_t *range_lower, const kad_uint256_t *range_upper, int capacity)
+void kad_bucket_init(kad_bucket_t *s, kad_id_t *range_lower, kad_id_t *range_upper, int capacity)
 {
-    kad_bucket_t *s;
-    s = malloc(sizeof(*s));
-    assert(s && "Out of memory");
-    s->range_lower = range_lower ? *range_lower : (kad_uint256_t){0};
-    s->range_upper = range_upper ? *range_upper : (kad_uint256_t){0};
+    s->range_lower = range_lower ? *range_lower : (kad_uint256_t){0}; // Inclusive.
+    s->range_upper = range_upper ? *range_upper : (kad_uint256_t){0}; // Inclusive.
     s->capacity = capacity;
     kad_ordereddict_init(&s->contacts);
     kad_ordereddict_init(&s->replacements);
     kad_bucket_touch(s); // last_touched_at.
+}
+
+void kad_bucket_fini(kad_bucket_t *s)
+{
+    kad_ordereddict_fini(&s->contacts);
+    kad_ordereddict_fini(&s->replacements);
+}
+
+kad_bucket_t *kad_bucket_new(kad_id_t *range_lower, kad_id_t *range_upper, int capacity)
+{
+    kad_bucket_t *s;
+    s = malloc(sizeof(*s));
+    assert(s && "Out of memory");
+    kad_bucket_init(s, range_lower, range_upper, capacity);
     return s;
 }
 
 void kad_bucket_free(kad_bucket_t *s)
 {
-    kad_ordereddict_fini(&s->contacts);
-    kad_ordereddict_fini(&s->replacements);
+    kad_bucket_fini(s);
     free(s);
 }
 
@@ -29,7 +39,7 @@ void kad_bucket_touch(kad_bucket_t *s)
     clock_gettime(CLOCK_MONOTONIC_RAW, &s->last_touched_at);
 }
 
-bool kad_bucket_add_contact(kad_bucket_t *s, kad_contact_t *c)
+bool kad_bucket_add_contact(kad_bucket_t *s, const kad_contact_t *c)
 {
     if (kad_ordereddict_pop(&s->contacts, &c->id, NULL) || !kad_bucket_is_full(s))
     {
@@ -46,7 +56,7 @@ bool kad_bucket_add_contact(kad_bucket_t *s, kad_contact_t *c)
 /**
  * @param c Contact. Copies.
  */
-void kad_bucket_add_replacement(kad_bucket_t *s, kad_contact_t *c)
+void kad_bucket_add_replacement(kad_bucket_t *s, const kad_contact_t *c)
 {
     kad_ordereddict_pop(&s->replacements, &c->id, NULL);
     kad_ordereddict_insert(&s->replacements, c);
@@ -56,7 +66,7 @@ void kad_bucket_add_replacement(kad_bucket_t *s, kad_contact_t *c)
     }
 }
 
-void kad_bucket_remove_contact(kad_bucket_t *s, const kad_uint256_t *id)
+void kad_bucket_remove_contact(kad_bucket_t *s, kad_id_t *id)
 {
     kad_ordereddict_pop(&s->replacements, id, NULL);
     if (kad_ordereddict_pop(&s->contacts, id, NULL))
@@ -130,12 +140,14 @@ void kad_bucket_split(kad_bucket_t *s, kad_bucket_t *r)
     assert((r->contacts.size == 0) && "Expected new bucket");
     assert((r->replacements.size == 0) && "Expected new bucket");
 
-    kad_uint256_t mid;
-    kad_uint256_avg(&s->range_lower, &s->range_upper, &mid);
+    kad_uint256_t midl;
+    kad_uint256_t midr;
+    kad_uint256_avg(&s->range_lower, &s->range_upper, &midl);
+    kad_uint256_add(&midl, &(kad_uint256_t){0, 0, 0, 0, 0, 0, 0, 1}, &midr);
 
     r->range_upper = s->range_upper;
-    r->range_lower = mid;
-    s->range_upper = mid;
+    r->range_lower = midr;
+    s->range_upper = midl;
 
     // 1. Loop through all contacts.
     // 2. Loop through all replacements.
@@ -155,7 +167,7 @@ void kad_bucket_split(kad_bucket_t *s, kad_bucket_t *r)
     // 3. Loop through everything and partition them correctly.
     while (kad_ordereddict_popfront(&all, &cont))
     {
-        if (kad_uint256_cmp(&cont.id, &mid) < 0)
+        if (kad_uint256_cmp(&cont.id, &midl) <= 0)
         {
             kad_bucket_add_contact(s, &cont);
         }
@@ -171,4 +183,21 @@ void kad_bucket_split(kad_bucket_t *s, kad_bucket_t *r)
 bool kad_bucket_is_full(const kad_bucket_t *s)
 {
     return s->contacts.size >= s->capacity;
+}
+
+bool kad_bucket_is_expired(const kad_bucket_t *s)
+{
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+    return (now.tv_sec - s->last_touched_at.tv_sec) > 60; // Minute.
+}
+
+int kad_bucket_iter(const kad_bucket_t *s, int (*cb)(const kad_contact_t *c, void *data), void *data)
+{
+    return kad_ordereddict_iter(&s->contacts, cb, data);
+}
+
+bool kad_bucket_contains(const kad_bucket_t *s, kad_id_t *id)
+{
+    return kad_ordereddict_contains(&s->contacts, id);
 }

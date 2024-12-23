@@ -122,10 +122,37 @@ MunitResult unit_ordereddict_pop_notexists(const MunitParameter params[], void *
     return MUNIT_OK;
 }
 
+MunitResult unit_ordereddict_contains(const MunitParameter params[], void *data)
+{
+    kad_ordereddict_t dict;
+    kad_ordereddict_init(&dict);
+
+    // Setup.
+    kad_uint256_t ids[] = {
+        {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 1}, {0, 0, 0, 0, 0, 0, 1, 0},
+        {0, 0, 0, 0, 0, 1, 0, 0}, {0, 0, 0, 0, 1, 0, 0, 0}, {0, 0, 0, 1, 0, 0, 0, 0},
+        {0, 0, 1, 0, 0, 0, 0, 0}, {0, 1, 0, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0, 0, 0},
+    };
+    int nids = sizeof(ids) / sizeof(ids[0]);
+
+    // Execute.
+    for (int i = 0; i < nids; i++)
+    {
+        munit_assert_false(kad_ordereddict_contains(&dict, &ids[i]));
+        kad_ordereddict_insert(&dict, &(kad_contact_t){ids[i], "127.0.0.1", "8080"});
+        munit_assert_true(kad_ordereddict_contains(&dict, &ids[i]));
+    }
+
+    // Cleanup.
+    kad_ordereddict_fini(&dict);
+    return MUNIT_OK;
+}
+
 MunitTest unit_ordereddict_tests[] = {
     {"/insert", unit_ordereddict_insert, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/insert_dup", unit_ordereddict_insert_dup, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/pop", unit_ordereddict_pop, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/pop_notexists", unit_ordereddict_pop_notexists, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+    {"/contains", unit_ordereddict_contains, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
 };

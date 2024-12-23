@@ -6,7 +6,7 @@
 #include <string.h>
 
 static void kad_ordereddictnode_free(kad_ordereddictnode_t *n);
-static kad_ordereddictnode_t *kad_ordereddictnode_new(kad_contact_t *c, kad_ordereddictnode_t *next);
+static kad_ordereddictnode_t *kad_ordereddictnode_new(const kad_contact_t *c, kad_ordereddictnode_t *next);
 
 void kad_ordereddict_init(kad_ordereddict_t *s)
 {
@@ -46,7 +46,7 @@ void kad_ordereddict_free(kad_ordereddict_t *s)
 /**
  * @param c Contact. Copies.
  */
-void kad_ordereddict_insert(kad_ordereddict_t *s, kad_contact_t *c)
+void kad_ordereddict_insert(kad_ordereddict_t *s, const kad_contact_t *c)
 {
     if (!s->head)
     {
@@ -80,7 +80,7 @@ void kad_ordereddict_insert(kad_ordereddict_t *s, kad_contact_t *c)
     }
 }
 
-bool kad_ordereddict_pop(kad_ordereddict_t *s, const kad_uint256_t *id, kad_contact_t *out)
+bool kad_ordereddict_pop(kad_ordereddict_t *s, kad_id_t *id, kad_contact_t *out)
 {
     if (!s->head)
     {
@@ -214,7 +214,7 @@ void kad_ordereddictnode_free(kad_ordereddictnode_t *n)
     free(n);
 }
 
-kad_ordereddictnode_t *kad_ordereddictnode_new(kad_contact_t *c, kad_ordereddictnode_t *next)
+kad_ordereddictnode_t *kad_ordereddictnode_new(const kad_contact_t *c, kad_ordereddictnode_t *next)
 {
     kad_ordereddictnode_t *n;
     n = malloc(sizeof(*n));
@@ -222,4 +222,37 @@ kad_ordereddictnode_t *kad_ordereddictnode_new(kad_contact_t *c, kad_ordereddict
     n->c = *c;
     n->next = next;
     return n;
+}
+
+int kad_ordereddict_iter(const kad_ordereddict_t *s, int (*cb)(const kad_contact_t *c, void *data), void *data)
+{
+    kad_ordereddictnode_t *curr = s->head;
+    while (curr)
+    {
+        int ret = cb(&curr->c, data);
+        if (ret == ITER_STOP)
+        {
+            return ret;
+        }
+
+        curr = curr->next;
+    }
+
+    return ITER_CONT;
+}
+
+bool kad_ordereddict_contains(const kad_ordereddict_t *s, kad_id_t *id)
+{
+    kad_ordereddictnode_t *curr = s->head;
+    while (curr)
+    {
+        if (kad_uint256_cmp(&curr->c.id, id) == 0)
+        {
+            return true;
+        }
+
+        curr = curr->next;
+    }
+
+    return false;
 }

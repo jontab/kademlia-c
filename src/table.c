@@ -34,7 +34,7 @@ void kad_table_fini(kad_table_t *s)
 {
     for (int i = 0; i < s->nbuckets; i++)
     {
-        kad_bucket_fini(&s->buckets[0]);
+        kad_bucket_fini(&s->buckets[i]);
     }
 
     free(s->buckets);
@@ -90,9 +90,9 @@ void kad_table_split_bucket(kad_table_t *s, int bix)
     s->buckets = realloc(s->buckets, s->nbuckets * sizeof(s->buckets[0]));
     assert(s->buckets && "Out of memory");
 
-    // s->nbuckets = 2, bix = 1. s->nbuckets - bix - 1 = 0.
-    // s->nbuckets = 2, bix = 0. s->nbuckets - bix - 1 = 1.
-    memmove(&s->buckets[bix + 2], &s->buckets[bix + 1], (s->nbuckets - bix - 1) * sizeof(s->buckets[0]));
+    // s->nbuckets = 3, bix = 1. s->nbuckets - bix - 2 = 0.
+    // s->nbuckets = 3, bix = 0. s->nbuckets - bix - 2 = 1.
+    memmove(&s->buckets[bix + 2], &s->buckets[bix + 1], (s->nbuckets - bix - 2) * sizeof(s->buckets[0]));
     kad_bucket_init(&s->buckets[bix + 1], NULL, NULL, s->capacity);
     kad_bucket_split(&s->buckets[bix], &s->buckets[bix + 1]);
 }

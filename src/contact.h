@@ -1,8 +1,8 @@
 #ifndef KADEMLIA_CONTACT_H
 #define KADEMLIA_CONTACT_H
 
+#include "uint256.h"
 #include <arpa/inet.h>
-#include <kademlia/uint256.h>
 
 typedef struct kad_contact_s kad_contact_t;
 

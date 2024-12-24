@@ -1,5 +1,5 @@
-#include <kademlia/log.h>
-#include <kademlia/uint256.h>
+#include "uint256.h"
+#include "log.h"
 
 int kad_uint256_cmp(const kad_uint256_t *a, const kad_uint256_t *b)
 {

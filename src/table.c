@@ -1,6 +1,6 @@
+#include "table.h"
+#include "log.h"
 #include <assert.h>
-#include <kademlia/log.h>
-#include <kademlia/table.h>
 #include <stdlib.h>
 #include <string.h>
 

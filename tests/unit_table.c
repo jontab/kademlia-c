@@ -1,6 +1,6 @@
-#include <kademlia/log.h>
-#include <kademlia/table.h>
-#include <kademlia/uint256.h>
+#include "log.h"
+#include "table.h"
+#include "uint256.h"
 #include <munit.h>
 
 MunitResult unit_table_contains(const MunitParameter params[], void *data)

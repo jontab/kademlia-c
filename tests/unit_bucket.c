@@ -1,5 +1,5 @@
-#include <kademlia/bucket.h>
-#include <kademlia/log.h>
+#include "bucket.h"
+#include "log.h"
 #include <munit.h>
 
 #define MIN(A, B) (((A) < (B)) ? (A) : (B))

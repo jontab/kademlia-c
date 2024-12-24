@@ -1,7 +1,7 @@
-#include <kademlia/contact.h>
-#include <kademlia/log.h>
-#include <kademlia/table.h>
-#include <kademlia/uint256.h>
+#include "log.h"
+#include "contact.h"
+#include "table.h"
+#include "uint256.h"
 #include <stdarg.h>
 
 void kad_printf(const char *fmt, ...)

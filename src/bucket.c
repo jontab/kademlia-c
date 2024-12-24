@@ -1,6 +1,6 @@
+#include "bucket.h"
+#include "log.h"
 #include <assert.h>
-#include <kademlia/bucket.h>
-#include <kademlia/log.h>
 #include <stdlib.h>
 
 void kad_bucket_init(kad_bucket_t *s, kad_id_t *range_lower, kad_id_t *range_upper, int capacity)

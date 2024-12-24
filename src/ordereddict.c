@@ -1,6 +1,6 @@
+#include "ordereddict.h"
+#include "uint256.h"
 #include <assert.h>
-#include <kademlia/ordereddict.h>
-#include <kademlia/uint256.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

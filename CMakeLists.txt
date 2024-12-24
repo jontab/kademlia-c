@@ -1,48 +1,41 @@
 cmake_minimum_required(VERSION 3.5)
 project(kademlia)
 
-##
-# kademlia-static
-##
+set(LIBKADEMLIA_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bucket.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/contact.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/log.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ordereddict.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/table.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/uint256.c)
 
-# add_library(kademlia-static STATIC
-#     src/bucket.c
-#     src/contact.c
-#     src/log.c
-#     src/ordereddict.c
-#     src/uint256.c)
+set(LIBKADEMLIA_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/bucket.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/contact.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/log.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ordereddict.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/table.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/uint256.h)
 
-# target_include_directories(kademlia-static PUBLIC
-#     include)
-
-# target_compile_options(kademlia-static PUBLIC
-#     -O0
-#     -g)
+set(TESTS_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/main.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/munit.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_bucket.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_ordereddict.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_table.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_uint256.c)
 
 ##
 # kademlia-tests
 ##
 
 add_executable(kademlia-tests
-    src/bucket.c
-    src/contact.c
-    src/log.c
-    src/ordereddict.c
-    src/table.c
-    src/uint256.c
-    tests/main.c
-    tests/munit.c
-    tests/unit_bucket.c
-    tests/unit_ordereddict.c
-    tests/unit_table.c
-    tests/unit_uint256.c)
+    ${LIBKADEMLIA_SOURCES}
+    ${TESTS_SOURCES})
 
-# target_link_libraries(kademlia-tests
-#     kademlia-static)
-
-target_include_directories(kademlia-tests PUBLIC
-    deps/munit
-    include)
+target_include_directories(kademlia-tests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/munit)
 
 target_compile_options(kademlia-tests PUBLIC
     -O0

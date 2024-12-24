@@ -1,5 +1,5 @@
+#include "contact.h"
 #include <assert.h>
-#include <kademlia/contact.h>
 #include <stdlib.h>
 #include <string.h>
 

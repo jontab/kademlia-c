@@ -1,7 +1,7 @@
 #ifndef KADEMLIA_ORDEREDDICT_H
 #define KADEMLIA_ORDEREDDICT_H
 
-#include <kademlia/contact.h>
+#include "contact.h"
 #include <stdbool.h>
 
 #define ITER_CONT 0

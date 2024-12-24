@@ -1,8 +1,8 @@
 #ifndef KADEMLIA_TABLE_H
 #define KADEMLIA_TABLE_H
 
-#include <kademlia/bucket.h>
-#include <kademlia/uint256.h>
+#include "bucket.h"
+#include "uint256.h"
 
 typedef struct kad_table_s kad_table_t;
 

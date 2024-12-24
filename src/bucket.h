@@ -1,8 +1,8 @@
 #ifndef KADEMLIA_BUCKET_H
 #define KADEMLIA_BUCKET_H
 
-#include <kademlia/ordereddict.h>
-#include <kademlia/uint256.h>
+#include "ordereddict.h"
+#include "uint256.h"
 #include <stdbool.h>
 #include <time.h>
 

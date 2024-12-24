@@ -4,6 +4,18 @@ Kademlia is an ingenious distributed hash-table (DHT) protocol that makes use of
 
 This is a work in-progress. I am writing it in C because I like the challenge.
 
+# External Dependencies
+
+The only external dependency that cannot be resolved via the `git submodule` command below is `libuv`. It is a cross-platform library used for asynchronous I/O operations.
+
+```sh
+jonab@MacBookPro kademlia-c % brew install libuv
+```
+
+```sh
+jonab@Ubuntu kademlia-c % sudo apt install libuv1-dev
+```
+
 # Building
 
 We use standard CMake to build the library and testing suite. For example, these are the commands I run to test locally.

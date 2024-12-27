@@ -15,7 +15,7 @@ MunitResult unit_ordereddict_insert(const MunitParameter params[], void *data)
 
     for (int i = 0; i < sizeof(ids) / sizeof(ids[0]); i++)
     {
-        kad_ordereddict_insert(&dict, &(kad_contact_t){ids[i], "127.0.0.1", "8080"});
+        kad_ordereddict_insert(&dict, &(kad_contact_t){ids[i], "127.0.0.1", 8080});
         munit_assert_int(dict.size, ==, i + 1);
     }
 
@@ -37,14 +37,14 @@ MunitResult unit_ordereddict_insert_dup(const MunitParameter params[], void *dat
 
     for (int i = 0; i < nids; i++)
     {
-        kad_ordereddict_insert(&dict, &(kad_contact_t){ids[i], "127.0.0.1", "8080"});
+        kad_ordereddict_insert(&dict, &(kad_contact_t){ids[i], "127.0.0.1", 8080});
         munit_assert_int(dict.size, ==, i + 1);
     }
 
     for (int i = 0; i < nids; i++)
     {
         // The size should not change.
-        kad_ordereddict_insert(&dict, &(kad_contact_t){ids[i], "127.0.0.1", "8080"});
+        kad_ordereddict_insert(&dict, &(kad_contact_t){ids[i], "127.0.0.1", 8080});
         munit_assert_int(dict.size, ==, nids);
     }
 
@@ -67,7 +67,7 @@ MunitResult unit_ordereddict_pop(const MunitParameter params[], void *data)
 
     for (int i = 0; i < nids; i++)
     {
-        kad_ordereddict_insert(&dict, &(kad_contact_t){ids[i], "127.0.0.1", "8080"});
+        kad_ordereddict_insert(&dict, &(kad_contact_t){ids[i], "127.0.0.1", 8080});
         munit_assert_int(dict.size, ==, i + 1);
     }
 
@@ -78,7 +78,7 @@ MunitResult unit_ordereddict_pop(const MunitParameter params[], void *data)
         munit_assert_true(kad_ordereddict_pop(&dict, &ids[i], &popped));
         munit_assert_int(kad_uint256_cmp(&popped.id, &ids[i]), ==, 0);
         munit_assert_string_equal(popped.host, "127.0.0.1");
-        munit_assert_string_equal(popped.port, "8080");
+        munit_assert_int(popped.port, ==, 8080);
         munit_assert_int(dict.size, ==, nids - i - 1);
     }
 
@@ -101,7 +101,7 @@ MunitResult unit_ordereddict_pop_notexists(const MunitParameter params[], void *
 
     for (int i = 0; i < nids; i++)
     {
-        kad_ordereddict_insert(&dict, &(kad_contact_t){ids[i], "127.0.0.1", "8080"});
+        kad_ordereddict_insert(&dict, &(kad_contact_t){ids[i], "127.0.0.1", 8080});
         munit_assert_int(dict.size, ==, i + 1);
     }
 
@@ -139,7 +139,7 @@ MunitResult unit_ordereddict_contains(const MunitParameter params[], void *data)
     for (int i = 0; i < nids; i++)
     {
         munit_assert_false(kad_ordereddict_contains(&dict, &ids[i]));
-        kad_ordereddict_insert(&dict, &(kad_contact_t){ids[i], "127.0.0.1", "8080"});
+        kad_ordereddict_insert(&dict, &(kad_contact_t){ids[i], "127.0.0.1", 8080});
         munit_assert_true(kad_ordereddict_contains(&dict, &ids[i]));
     }
 

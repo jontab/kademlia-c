@@ -4,13 +4,13 @@
 MunitResult unit_rpc_create_ping_request(const MunitParameter params[], void *data)
 {
     kad_id_t sender_id = {{2, 1, 2, 1, 2, 1, 2, 1}};
-    cJSON *monitor = create_ping_request(&sender_id);
+    cJSON   *monitor = create_ping_request(&sender_id);
 
     char *p_version = cJSON_GetStringValue(cJSON_GetObjectItem(monitor, "jsonrpc"));
     char *p_method = cJSON_GetStringValue(cJSON_GetObjectItem(monitor, "method"));
     munit_assert_true(cJSON_IsNull(cJSON_GetObjectItem(monitor, "id")));
     cJSON *p_params = cJSON_GetObjectItem(monitor, "params");
-    char *p_sender_id = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 0));
+    char  *p_sender_id = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 0));
 
     munit_assert_string_equal(p_version, "2.0");
     munit_assert_string_equal(p_method, "ping");
@@ -24,14 +24,14 @@ MunitResult unit_rpc_create_find_node_request(const MunitParameter params[], voi
 {
     kad_id_t sender_id = {{2, 1, 2, 1, 2, 1, 2, 1}};
     kad_id_t target_id = {{4, 3, 4, 3, 4, 3, 4, 3}};
-    cJSON *monitor = create_find_node_request(&sender_id, &target_id);
+    cJSON   *monitor = create_find_node_request(&sender_id, &target_id);
 
     char *p_version = cJSON_GetStringValue(cJSON_GetObjectItem(monitor, "jsonrpc"));
     char *p_method = cJSON_GetStringValue(cJSON_GetObjectItem(monitor, "method"));
     munit_assert_true(cJSON_IsNull(cJSON_GetObjectItem(monitor, "id")));
     cJSON *p_params = cJSON_GetObjectItem(monitor, "params");
-    char *p_sender_id = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 0));
-    char *p_target_id = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 1));
+    char  *p_sender_id = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 0));
+    char  *p_target_id = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 1));
 
     munit_assert_string_equal(p_version, "2.0");
     munit_assert_string_equal(p_method, "find_node");
@@ -45,15 +45,15 @@ MunitResult unit_rpc_create_find_node_request(const MunitParameter params[], voi
 MunitResult unit_rpc_create_store_request(const MunitParameter params[], void *data)
 {
     kad_id_t sender_id = {{2, 1, 2, 1, 2, 1, 2, 1}};
-    cJSON *monitor = create_store_request(&sender_id, "key", "value");
+    cJSON   *monitor = create_store_request(&sender_id, "key", "value");
 
     char *p_version = cJSON_GetStringValue(cJSON_GetObjectItem(monitor, "jsonrpc"));
     char *p_method = cJSON_GetStringValue(cJSON_GetObjectItem(monitor, "method"));
     munit_assert_true(cJSON_IsNull(cJSON_GetObjectItem(monitor, "id")));
     cJSON *p_params = cJSON_GetObjectItem(monitor, "params");
-    char *p_sender_id = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 0));
-    char *p_key = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 1));
-    char *p_value = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 2));
+    char  *p_sender_id = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 0));
+    char  *p_key = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 1));
+    char  *p_value = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 2));
 
     munit_assert_string_equal(p_version, "2.0");
     munit_assert_string_equal(p_method, "store");
@@ -68,14 +68,14 @@ MunitResult unit_rpc_create_store_request(const MunitParameter params[], void *d
 MunitResult unit_rpc_create_find_value_request(const MunitParameter params[], void *data)
 {
     kad_id_t sender_id = {{2, 1, 2, 1, 2, 1, 2, 1}};
-    cJSON *monitor = create_find_value_request(&sender_id, "key");
+    cJSON   *monitor = create_find_value_request(&sender_id, "key");
 
     char *p_version = cJSON_GetStringValue(cJSON_GetObjectItem(monitor, "jsonrpc"));
     char *p_method = cJSON_GetStringValue(cJSON_GetObjectItem(monitor, "method"));
     munit_assert_true(cJSON_IsNull(cJSON_GetObjectItem(monitor, "id")));
     cJSON *p_params = cJSON_GetObjectItem(monitor, "params");
-    char *p_sender_id = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 0));
-    char *p_key = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 1));
+    char  *p_sender_id = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 0));
+    char  *p_key = cJSON_GetStringValue(cJSON_GetArrayItem(p_params, 1));
 
     munit_assert_string_equal(p_version, "2.0");
     munit_assert_string_equal(p_method, "find_value");

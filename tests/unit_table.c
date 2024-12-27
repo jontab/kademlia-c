@@ -7,17 +7,17 @@ MunitResult unit_table_contains(const MunitParameter params[], void *data)
 {
     // Setup.
     kad_table_t t;
-    kad_table_init(&t, &(kad_uint256_t){0}, 8);
+    kad_table_init(&t, &(kad_uint256_t){0}, 8, NULL);
 
     kad_contact_t conts[] = {
-        {.id = {0, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 1, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 2, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 3, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 4, 0, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 5, 0, 0, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 6, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {7, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = "8080"},
+        {.id = {0, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 1, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 2, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 3, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 4, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 5, 0, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 6, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {7, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
     };
     int nids = sizeof(conts) / sizeof(conts[0]);
 
@@ -38,13 +38,13 @@ MunitResult unit_table_add_contact(const MunitParameter params[], void *data)
 {
     // Setup.
     kad_table_t t;
-    kad_table_init(&t, &(kad_uint256_t){rand(), rand(), rand(), rand(), rand(), rand(), rand(), rand()}, 8);
+    kad_table_init(&t, &(kad_uint256_t){rand(), rand(), rand(), rand(), rand(), rand(), rand(), rand()}, 8, NULL);
 
     // Execute.
     for (int i = 0; i < 10000; i++)
     {
         kad_uint256_t id = {rand(), rand(), rand(), rand(), rand(), rand(), rand(), rand()};
-        kad_contact_t c = {id, "localhost", "8080"};
+        kad_contact_t c = {id, "localhost", 8080};
         kad_table_add_contact(&t, &c);
     }
 
@@ -59,17 +59,17 @@ MunitResult unit_table_remove_contact(const MunitParameter params[], void *data)
 {
     // Setup.
     kad_table_t t;
-    kad_table_init(&t, &(kad_uint256_t){0}, 8);
+    kad_table_init(&t, &(kad_uint256_t){0}, 8, NULL);
 
     kad_contact_t conts[] = {
-        {.id = {0, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 1, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 2, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 3, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 4, 0, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 5, 0, 0, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 6, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {7, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = "8080"},
+        {.id = {0, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 1, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 2, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 3, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 4, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 5, 0, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 6, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {7, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
     };
     int nids = sizeof(conts) / sizeof(conts[0]);
 
@@ -129,17 +129,17 @@ MunitResult unit_table_find_closest(const MunitParameter params[], void *data)
 {
     // Setup.
     kad_table_t t;
-    kad_table_init(&t, &(kad_uint256_t){0}, 4);
+    kad_table_init(&t, &(kad_uint256_t){0}, 4, NULL);
 
     kad_contact_t conts[] = {
-        {.id = {0x00000000, 0, 0, 0, 0, 0, 0, 1}, .host = "localhost", .port = "8080"},
-        {.id = {0x00000000, 0, 0, 0, 0, 0, 2, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0x00000000, 0, 0, 0, 0, 3, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0x00000000, 0, 0, 0, 4, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0x80000000, 0, 0, 0, 0, 0, 0, 1}, .host = "localhost", .port = "8080"},
-        {.id = {0x80000000, 0, 0, 0, 0, 0, 2, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0x80000000, 0, 0, 0, 0, 3, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0x80000000, 0, 0, 0, 4, 0, 0, 0}, .host = "localhost", .port = "8080"},
+        {.id = {0x00000000, 0, 0, 0, 0, 0, 0, 1}, .host = "localhost", .port = 8080},
+        {.id = {0x00000000, 0, 0, 0, 0, 0, 2, 0}, .host = "localhost", .port = 8080},
+        {.id = {0x00000000, 0, 0, 0, 0, 3, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0x00000000, 0, 0, 0, 4, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0x80000000, 0, 0, 0, 0, 0, 0, 1}, .host = "localhost", .port = 8080},
+        {.id = {0x80000000, 0, 0, 0, 0, 0, 2, 0}, .host = "localhost", .port = 8080},
+        {.id = {0x80000000, 0, 0, 0, 0, 3, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0x80000000, 0, 0, 0, 4, 0, 0, 0}, .host = "localhost", .port = 8080},
     };
     int nids = sizeof(conts) / sizeof(conts[0]);
 
@@ -149,7 +149,7 @@ MunitResult unit_table_find_closest(const MunitParameter params[], void *data)
     }
 
     // Execute.
-    int i = 0;
+    int       i = 0;
     kad_id_t *id = &conts[4].id;
     kad_id_t *ex = id;
     kad_table_find_closest(&t, id, ex, unit_table_find_closest_cb, (void *)(&i));

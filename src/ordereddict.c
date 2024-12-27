@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void kad_ordereddictnode_free(kad_ordereddictnode_t *n);
+static void                   kad_ordereddictnode_free(kad_ordereddictnode_t *n);
 static kad_ordereddictnode_t *kad_ordereddictnode_new(const kad_contact_t *c, kad_ordereddictnode_t *next);
 
 void kad_ordereddict_init(kad_ordereddict_t *s)

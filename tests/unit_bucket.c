@@ -12,14 +12,14 @@ MunitResult unit_bucket_add_contact(const MunitParameter params[], void *data)
     kad_bucket_t *b = kad_bucket_new(&lo, &hi, 1);
 
     kad_contact_t conts[] = {
-        {.id = {0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 1}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 2}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 3}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 4}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 5}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 6}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 7}, .host = "localhost", .port = "8080"},
+        {.id = {0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 1}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 2}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 3}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 4}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 5}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 6}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 7}, .host = "localhost", .port = 8080},
     };
 
     // Execute.
@@ -52,11 +52,11 @@ MunitResult unit_bucket_remove_contact(const MunitParameter params[], void *data
     kad_bucket_t *b = kad_bucket_new(&lo, &hi, 1);
 
     kad_contact_t conts[] = {
-        {.id = {0, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 0, 1}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 0, 2}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 0, 3}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 0, 4}, .host = "localhost", .port = "8080"},
+        {.id = {0, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 0, 1}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 0, 2}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 0, 3}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 0, 4}, .host = "localhost", .port = 8080},
     };
     int nids = sizeof(conts) / sizeof(conts[0]);
 
@@ -86,10 +86,10 @@ MunitResult unit_bucket_depth(const MunitParameter params[], void *data)
     kad_bucket_t *b = kad_bucket_new(&lo, &hi, 8);
 
     kad_contact_t conts[] = {
-        {.id = {0, 0x00, 0, 0x00, 0, 0x00, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0x00, 0, 0x00, 0, 0x10, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0x00, 0, 0x10, 0, 0x00, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0x10, 0, 0x00, 0, 0x00, 0, 0}, .host = "localhost", .port = "8080"},
+        {.id = {0, 0x00, 0, 0x00, 0, 0x00, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0x00, 0, 0x00, 0, 0x10, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0x00, 0, 0x10, 0, 0x00, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0x10, 0, 0x00, 0, 0x00, 0, 0}, .host = "localhost", .port = 8080},
     };
     int nids = sizeof(conts) / sizeof(conts[0]);
 
@@ -120,11 +120,11 @@ MunitResult unit_bucket_split(const MunitParameter params[], void *data)
     kad_bucket_t *r = kad_bucket_new(NULL, NULL, 8);
 
     kad_contact_t conts[] = {
-        {.id = {0, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 0, 1}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 0, 2}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 0, 3}, .host = "localhost", .port = "8080"},
-        {.id = {0, 0, 0, 0, 0, 0, 0, 4}, .host = "localhost", .port = "8080"},
+        {.id = {0, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 0, 1}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 0, 2}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 0, 3}, .host = "localhost", .port = 8080},
+        {.id = {0, 0, 0, 0, 0, 0, 0, 4}, .host = "localhost", .port = 8080},
     };
     int nids = sizeof(conts) / sizeof(conts[0]);
 

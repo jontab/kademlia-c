@@ -14,7 +14,7 @@ struct kad_uint256_s
 typedef const kad_uint256_t kad_id_t;
 
 // TODO: Consider using a library for this.
-int kad_uint256_cmp(const kad_uint256_t *a, const kad_uint256_t *b);
+int  kad_uint256_cmp(const kad_uint256_t *a, const kad_uint256_t *b);
 void kad_uint256_and(const kad_uint256_t *a, const kad_uint256_t *b, kad_uint256_t *res);
 void kad_uint256_xor(const kad_uint256_t *a, const kad_uint256_t *b, kad_uint256_t *res);
 void kad_uint256_rsh(const kad_uint256_t *a, int amt, kad_uint256_t *out);

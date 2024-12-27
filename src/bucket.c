@@ -151,7 +151,7 @@ void kad_bucket_split(kad_bucket_t *s, kad_bucket_t *r)
 
     // 1. Loop through all contacts.
     // 2. Loop through all replacements.
-    kad_contact_t cont;
+    kad_contact_t     cont;
     kad_ordereddict_t all;
     kad_ordereddict_init(&all);
     while (kad_ordereddict_popfront(&s->contacts, &cont))
@@ -200,4 +200,9 @@ int kad_bucket_iter(const kad_bucket_t *s, int (*cb)(const kad_contact_t *c, voi
 bool kad_bucket_contains(const kad_bucket_t *s, kad_id_t *id)
 {
     return kad_ordereddict_contains(&s->contacts, id);
+}
+
+void kad_bucket_head(const kad_bucket_t *s, kad_contact_t *c)
+{
+    *c = s->contacts.head->c;
 }

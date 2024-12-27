@@ -5,8 +5,8 @@
 
 #ifndef KADEMLIA_NDEBUG
 #define kad_debug(...) kad_printf("[debug] " __VA_ARGS__)
-#define kad_info(...) kad_printf("[info] " __VA_ARGS__)
-#define kad_warn(...) kad_printf("[warn] " __VA_ARGS__)
+#define kad_info(...)  kad_printf("[info] " __VA_ARGS__)
+#define kad_warn(...)  kad_printf("[warn] " __VA_ARGS__)
 #define kad_error(...) kad_printf("[error] " __VA_ARGS__)
 #define kad_fatal(...) kad_printf("[fatal] " __VA_ARGS__)
 #else

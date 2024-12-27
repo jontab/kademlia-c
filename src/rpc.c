@@ -4,13 +4,13 @@
 
 #define ID_SERIALIZE_LEN (sizeof(kad_uint256_t) * 2 + 3) // "0x" + '\0'.
 
-static void kad_id_serialize(const kad_id_t *id, char *buffer);
+static void kad_id_serialize(kad_id_t *id, char *buffer);
 
 //
 // Public
 //
 
-cJSON *create_ping_request(const kad_id_t *sender_id)
+cJSON *create_ping_request(kad_id_t *sender_id)
 {
     cJSON *monitor = cJSON_CreateObject();
     assert(monitor && "Out of memory");
@@ -18,7 +18,7 @@ cJSON *create_ping_request(const kad_id_t *sender_id)
     char serialized_sender_id[ID_SERIALIZE_LEN];
     kad_id_serialize(sender_id, serialized_sender_id);
 
-    cJSON *ret;
+    cJSON     *ret;
     cJSON_bool retbool;
 
     ret = cJSON_AddStringToObject(monitor, "jsonrpc", "2.0");
@@ -35,7 +35,7 @@ cJSON *create_ping_request(const kad_id_t *sender_id)
     return monitor;
 }
 
-cJSON *create_find_node_request(const kad_id_t *sender_id, const kad_id_t *target_id)
+cJSON *create_find_node_request(kad_id_t *sender_id, kad_id_t *target_id)
 {
     cJSON *monitor = cJSON_CreateObject();
     assert(monitor && "Out of memory");
@@ -45,7 +45,7 @@ cJSON *create_find_node_request(const kad_id_t *sender_id, const kad_id_t *targe
     kad_id_serialize(sender_id, serialized_sender_id);
     kad_id_serialize(target_id, serialized_target_id);
 
-    cJSON *ret;
+    cJSON     *ret;
     cJSON_bool retbool;
 
     ret = cJSON_AddStringToObject(monitor, "jsonrpc", "2.0");
@@ -64,7 +64,7 @@ cJSON *create_find_node_request(const kad_id_t *sender_id, const kad_id_t *targe
     return monitor;
 }
 
-cJSON *create_store_request(const kad_id_t *sender_id, const char *key, const char *value)
+cJSON *create_store_request(kad_id_t *sender_id, const char *key, const char *value)
 {
     cJSON *monitor = cJSON_CreateObject();
     assert(monitor && "Out of memory");
@@ -72,7 +72,7 @@ cJSON *create_store_request(const kad_id_t *sender_id, const char *key, const ch
     char serialized_sender_id[ID_SERIALIZE_LEN];
     kad_id_serialize(sender_id, serialized_sender_id);
 
-    cJSON *ret;
+    cJSON     *ret;
     cJSON_bool retbool;
 
     ret = cJSON_AddStringToObject(monitor, "jsonrpc", "2.0");
@@ -93,7 +93,7 @@ cJSON *create_store_request(const kad_id_t *sender_id, const char *key, const ch
     return monitor;
 }
 
-cJSON *create_find_value_request(const kad_id_t *sender_id, const char *key)
+cJSON *create_find_value_request(kad_id_t *sender_id, const char *key)
 {
     cJSON *monitor = cJSON_CreateObject();
     assert(monitor && "Out of memory");
@@ -101,7 +101,7 @@ cJSON *create_find_value_request(const kad_id_t *sender_id, const char *key)
     char serialized_sender_id[ID_SERIALIZE_LEN];
     kad_id_serialize(sender_id, serialized_sender_id);
 
-    cJSON *ret;
+    cJSON     *ret;
     cJSON_bool retbool;
 
     ret = cJSON_AddStringToObject(monitor, "jsonrpc", "2.0");
@@ -124,7 +124,7 @@ cJSON *create_find_value_request(const kad_id_t *sender_id, const char *key)
 // Static
 //
 
-void kad_id_serialize(const kad_id_t *id, char *buffer)
+void kad_id_serialize(kad_id_t *id, char *buffer)
 {
     *(buffer++) = '0';
     *(buffer++) = 'x';

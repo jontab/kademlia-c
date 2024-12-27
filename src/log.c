@@ -53,7 +53,7 @@ void kad_printf(const char *fmt, ...)
 
             case 'B': // kad_bucket_t *.
             {
-                kad_bucket_t *bval = va_arg(arg_list, kad_bucket_t *);
+                kad_bucket_t          *bval = va_arg(arg_list, kad_bucket_t *);
                 kad_ordereddictnode_t *curr;
 
                 kad_printf("Contacts\n");

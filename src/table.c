@@ -1,5 +1,6 @@
 #include "table.h"
 #include "log.h"
+#include "protocol.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,7 +32,7 @@ static void kad_table_add_contact_inner_ping_callback(bool ok, void *user);
 // Public
 //
 
-void kad_table_init(kad_table_t *s, kad_id_t *id, int capacity, kad_protocol_t *protocol)
+void kad_table_init(kad_table_t *s, kad_id_t *id, int capacity)
 {
     s->id = *id;
     s->capacity = capacity;
@@ -43,7 +44,6 @@ void kad_table_init(kad_table_t *s, kad_id_t *id, int capacity, kad_protocol_t *
     kad_bucket_init(&s->buckets[0], &lo, &hi, capacity);
 
     s->nbuckets = 1;
-    s->protocol = protocol;
 }
 
 void kad_table_fini(kad_table_t *s)
@@ -55,6 +55,11 @@ void kad_table_fini(kad_table_t *s)
 
     free(s->buckets);
     memset(s, 0, sizeof(*s));
+}
+
+void kad_table_set_protocol(kad_table_t *s, kad_protocol_t *protocol)
+{
+    s->protocol = protocol;
 }
 
 bool kad_table_contains(const kad_table_t *s, kad_id_t *id)

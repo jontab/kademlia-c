@@ -7,6 +7,7 @@ set(LIBKADEMLIA_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/contact.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/log.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ordereddict.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/table.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/uint256.c)
@@ -27,6 +28,7 @@ set(TESTS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/munit.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_bucket.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_ordereddict.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_protocol.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_rpc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_table.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_uint256.c)

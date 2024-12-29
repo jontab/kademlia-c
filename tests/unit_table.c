@@ -7,7 +7,7 @@ MunitResult unit_table_contains(const MunitParameter params[], void *data)
 {
     // Setup.
     kad_table_t t;
-    kad_table_init(&t, &(kad_uint256_t){0}, 8, NULL);
+    kad_table_init(&t, &(kad_uint256_t){0}, 8);
 
     kad_contact_t conts[] = {
         {.id = {0, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
@@ -38,7 +38,7 @@ MunitResult unit_table_add_contact(const MunitParameter params[], void *data)
 {
     // Setup.
     kad_table_t t;
-    kad_table_init(&t, &(kad_uint256_t){rand(), rand(), rand(), rand(), rand(), rand(), rand(), rand()}, 8, NULL);
+    kad_table_init(&t, &(kad_uint256_t){rand(), rand(), rand(), rand(), rand(), rand(), rand(), rand()}, 8);
 
     // Execute.
     for (int i = 0; i < 10000; i++)
@@ -59,7 +59,7 @@ MunitResult unit_table_remove_contact(const MunitParameter params[], void *data)
 {
     // Setup.
     kad_table_t t;
-    kad_table_init(&t, &(kad_uint256_t){0}, 8, NULL);
+    kad_table_init(&t, &(kad_uint256_t){0}, 8);
 
     kad_contact_t conts[] = {
         {.id = {0, 0, 0, 0, 0, 0, 0, 0}, .host = "localhost", .port = 8080},
@@ -129,7 +129,7 @@ MunitResult unit_table_find_closest(const MunitParameter params[], void *data)
 {
     // Setup.
     kad_table_t t;
-    kad_table_init(&t, &(kad_uint256_t){0}, 4, NULL);
+    kad_table_init(&t, &(kad_uint256_t){0}, 4);
 
     kad_contact_t conts[] = {
         {.id = {0x00000000, 0, 0, 0, 0, 0, 0, 1}, .host = "localhost", .port = 8080},

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(kademlia)
 
 set(LIBKADEMLIA_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/alloc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bucket.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cJSON.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/contact.c
@@ -13,6 +14,7 @@ set(LIBKADEMLIA_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/uint256.c)
 
 set(LIBKADEMLIA_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/alloc.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bucket.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cJSON.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/contact.h

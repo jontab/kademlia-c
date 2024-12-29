@@ -1,4 +1,5 @@
 #include "protocol.h"
+#include "alloc.h"
 #include "cJSON.h"
 #include "log.h"
 #include "rpc.h"
@@ -15,14 +16,18 @@ static void kad_uv_protocol_start_recv(kad_uv_protocol_t *self, const char *host
 static void send_request_cb(uv_udp_send_t *req, int status);
 static void send_response_cb(uv_udp_send_t *req, int status);
 static void recv_cb(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf, const struct sockaddr *addr, unsigned flags);
+static void recv_cb_request(void);
 static void uv_buf_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf);
+
+typedef struct send_context_s send_context_t;
 
 struct send_context_s
 {
     kad_uv_protocol_t *self;
     int                request_id;
     void              *user;
-    void (*resolve)(bool ok, void *data);
+    kad_resolve_t      resolve;
+    int                type;
 };
 
 //
@@ -31,9 +36,7 @@ struct send_context_s
 
 kad_uv_protocol_t *kad_uv_protocol_new(uv_loop_t *loop, kad_table_t *table)
 {
-    kad_uv_protocol_t *self;
-    self = calloc(1, sizeof(*self));
-    assert(self && "Out of memory");
+    kad_uv_protocol_t *self = kad_alloc(1, sizeof(kad_uv_protocol_t));
     self->base = (kad_protocol_t){
         .ping = kad_uv_protocol_ping,
         .store = kad_uv_protocol_store,
@@ -67,34 +70,81 @@ void kad_uv_protocol_ping(const kad_ping_args_t *args)
     struct sockaddr_in addr;
     uv_ip4_addr(args->host, args->port, &addr);
 
-    uv_udp_send_t         *send_req;
-    struct send_context_s *send_ctx;
-    send_req = malloc(sizeof(*send_req));
-    assert(send_req && "Out of memory");
-    send_ctx = malloc(sizeof(*send_ctx));
-    assert(send_ctx && "Out of memory");
-
+    uv_udp_send_t  *send_req = kad_alloc(1, sizeof(uv_udp_send_t));
+    send_context_t *send_ctx = kad_alloc(1, sizeof(send_context_t));
     send_ctx->self = self;
     send_ctx->user = args->user;
     send_ctx->resolve = args->callback;
+    send_ctx->type = KAD_PING;
     send_req->data = (void *)(send_ctx);
 
     char    *payload = create_ping_request(args->id, &send_ctx->request_id);
-    uv_buf_t buf = uv_buf_init(payload, strlen(payload) + 1);
+    uv_buf_t payload_buf = uv_buf_init(payload, strlen(payload) + 1);
 
-    uv_udp_send(send_req, &self->socket, &buf, 1, (struct sockaddr *)(&addr), send_request_cb);
+    uv_udp_send(send_req, &self->socket, &payload_buf, 1, (struct sockaddr *)(&addr), send_request_cb);
 }
 
 void kad_uv_protocol_store(const kad_store_args_t *args)
 {
+    kad_uv_protocol_t *self = (kad_uv_protocol_t *)(args->self);
+
+    struct sockaddr_in addr;
+    uv_ip4_addr(args->host, args->port, &addr);
+
+    uv_udp_send_t  *send_req = kad_alloc(1, sizeof(uv_udp_send_t));
+    send_context_t *send_ctx = kad_alloc(1, sizeof(send_context_t));
+    send_ctx->self = self;
+    send_ctx->user = args->user;
+    send_ctx->resolve = args->callback;
+    send_ctx->type = KAD_STORE;
+    send_req->data = (void *)(send_ctx);
+
+    char    *payload = create_store_request(args->id, args->key, args->value, &send_ctx->request_id);
+    uv_buf_t payload_buf = uv_buf_init(payload, strlen(payload) + 1);
+
+    uv_udp_send(send_req, &self->socket, &payload_buf, 1, (struct sockaddr *)(&addr), send_request_cb);
 }
 
 void kad_uv_protocol_find_node(const kad_find_node_args_t *args)
 {
+    kad_uv_protocol_t *self = (kad_uv_protocol_t *)(args->self);
+
+    struct sockaddr_in addr;
+    uv_ip4_addr(args->host, args->port, &addr);
+
+    uv_udp_send_t  *send_req = kad_alloc(1, sizeof(uv_udp_send_t));
+    send_context_t *send_ctx = kad_alloc(1, sizeof(send_context_t));
+    send_ctx->self = self;
+    send_ctx->user = args->user;
+    send_ctx->resolve = args->callback;
+    send_ctx->type = KAD_FIND_NODE;
+    send_req->data = (void *)(send_ctx);
+
+    char    *payload = create_find_node_request(args->id, args->target_id, &send_ctx->request_id);
+    uv_buf_t payload_buf = uv_buf_init(payload, strlen(payload) + 1);
+
+    uv_udp_send(send_req, &self->socket, &payload_buf, 1, (struct sockaddr *)(&addr), send_request_cb);
 }
 
 void kad_uv_protocol_find_value(const kad_find_value_args_t *args)
 {
+    kad_uv_protocol_t *self = (kad_uv_protocol_t *)(args->self);
+
+    struct sockaddr_in addr;
+    uv_ip4_addr(args->host, args->port, &addr);
+
+    uv_udp_send_t  *send_req = kad_alloc(1, sizeof(uv_udp_send_t));
+    send_context_t *send_ctx = kad_alloc(1, sizeof(send_context_t));
+    send_ctx->self = self;
+    send_ctx->user = args->user;
+    send_ctx->resolve = args->callback;
+    send_ctx->type = KAD_FIND_VALUE;
+    send_req->data = (void *)(send_ctx);
+
+    char    *payload = create_find_value_request(args->id, args->key, &send_ctx->request_id);
+    uv_buf_t payload_buf = uv_buf_init(payload, strlen(payload) + 1);
+
+    uv_udp_send(send_req, &self->socket, &payload_buf, 1, (struct sockaddr *)(&addr), send_request_cb);
 }
 
 void kad_uv_protocol_start_recv(kad_uv_protocol_t *self, const char *host, int port)
@@ -113,16 +163,15 @@ void send_request_cb(uv_udp_send_t *send_req, int status)
 {
     if (status == 0) // OK.
     {
-        struct send_context_s *send_ctx = (struct send_context_s *)(send_req->data);
+        send_context_t *send_ctx = (send_context_t *)(send_req->data);
 
         kad_debug("sending request with id: %d\n", send_ctx->request_id);
 
-        kad_promise_t *promise;
-        promise = malloc(sizeof(*promise));
-        assert(promise && "Out of memory");
+        kad_promise_t *promise = kad_alloc(1, sizeof(kad_promise_t));
         promise->id = send_ctx->request_id;
         promise->resolve = send_ctx->resolve;
         promise->user = send_ctx->user;
+        promise->type = send_ctx->type;
 
         kad_promise_list_append(&send_ctx->self->promises, promise);
     }
@@ -180,54 +229,57 @@ void recv_cb(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf, const struct 
         kad_debug("got data from [%s]:%d\n", addr_host, addr_port);
     }
 
-    // TODO: Move this into `rpc.c`.
-    cJSON *monitor = cJSON_ParseWithLength(buf->base, nread);
-    if ((monitor == NULL) || !cJSON_IsObject(monitor))
+    void *parse_data = kad_payload_parse(buf->base, nread);
+    if (!parse_data)
     {
-        kad_warn("recv_cb: payload is not an object\n");
-        goto cleanup;
+        kad_warn("recv_cb: failed to parse payload\n");
+        return;
     }
 
-    cJSON *id = cJSON_GetObjectItem(monitor, "id");
-    if ((id == NULL) || !cJSON_IsNumber(id))
+    int request_id;
+    if (!kad_payload_request_id(parse_data, &request_id))
     {
-        kad_warn("recv_cb: id is not a number\n");
-        goto cleanup;
+        kad_warn("recv_cb: failed to parse request_id\n");
+        return;
     }
 
-    cJSON *method = cJSON_GetObjectItem(monitor, "method");
-    if (method)
+    if (kad_payload_is_request(parse_data))
     {
         // Request.
-        cJSON *params = cJSON_GetObjectItem(monitor, "params");
-        if ((params == NULL) || !cJSON_IsArray(params))
+        kad_request_t request;
+        if (!kad_payload_parse_request(parse_data, &request))
         {
-            kad_warn("recv_cb: params is not an array\n");
-            goto cleanup;
+            kad_warn("recv_cb: failed to parse request\n");
+            return;
         }
 
         kad_uv_protocol_t *self = (kad_uv_protocol_t *)(handle->data);
-        int                request_id = (int)(cJSON_GetNumberValue(id));
-        char              *method_str = cJSON_GetStringValue(method);
+        switch (request.type)
+        {
+        case KAD_PING: {
+            char    *response = create_ping_response(&self->table->id, request_id);
+            uv_buf_t response_buf = uv_buf_init(response, strlen(response) + 1);
 
-        kad_debug("got request for: %s with id: %d\n", method_str, request_id);
+            // TODO: Add to table.
+            uv_udp_send_t *send_req = kad_alloc(1, sizeof(uv_udp_send_t));
+            uv_udp_send(send_req, handle, &response_buf, 1, addr, send_response_cb);
+            break;
+        }
 
-        assert((strcmp(method_str, "ping") == 0) && "Expected ping");
-        char    *response = create_ping_response(&self->table->id, request_id);
-        uv_buf_t response_buf = uv_buf_init(response, strlen(response) + 1);
+        // TODO: Other types.
+        default:
+            kad_warn("recv_cb: unhandled request type: %d\n", request.type);
+            return;
+        }
 
-        uv_udp_send_t *send_req;
-        send_req = malloc(sizeof(*send_req));
-        assert(send_req && "Out of memory");
-
-        uv_udp_send(send_req, handle, &response_buf, 1, addr, send_response_cb);
+        // Cleanup.
+        kad_request_fini(&request, parse_data);
     }
     else
     {
         // Response.
         kad_uv_protocol_t *self = (kad_uv_protocol_t *)(handle->data);
         int                promise_i = -1;
-        int                request_id = (int)(cJSON_GetNumberValue(id));
 
         kad_debug("got response for id: %d\n", request_id);
 
@@ -243,16 +295,19 @@ void recv_cb(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf, const struct 
         if (promise_i < 0)
         {
             kad_warn("recv_cb: cannot find promise with id: %d\n", request_id);
-            goto cleanup;
+            return;
         }
 
+        // Execute.
+        kad_result_t   result;
         kad_promise_t *promise = self->promises.data[promise_i];
-        promise->resolve(true, promise->user);
+        kad_payload_parse_result(parse_data, promise->type, &result);
+        promise->resolve(true, &result, promise->user);
         kad_promise_list_remove(&self->promises, promise_i);
-    }
 
-cleanup:
-    free(monitor);
+        // Cleanup.
+        kad_result_fini(&result, parse_data);
+    }
 }
 
 void uv_buf_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf)

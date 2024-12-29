@@ -1,9 +1,10 @@
 #include "bucket.h"
+#include "alloc.h"
 #include "log.h"
 #include <assert.h>
 #include <stdlib.h>
 
-void kad_bucket_init(kad_bucket_t *s, kad_id_t *range_lower, kad_id_t *range_upper, int capacity)
+void kad_bucket_init(kad_bucket_t *s, const kad_id_t *range_lower, const kad_id_t *range_upper, int capacity)
 {
     s->range_lower = range_lower ? *range_lower : (kad_uint256_t){0}; // Inclusive.
     s->range_upper = range_upper ? *range_upper : (kad_uint256_t){0}; // Inclusive.
@@ -19,11 +20,9 @@ void kad_bucket_fini(kad_bucket_t *s)
     kad_ordereddict_fini(&s->replacements);
 }
 
-kad_bucket_t *kad_bucket_new(kad_id_t *range_lower, kad_id_t *range_upper, int capacity)
+kad_bucket_t *kad_bucket_new(const kad_id_t *range_lower, const kad_id_t *range_upper, int capacity)
 {
-    kad_bucket_t *s;
-    s = malloc(sizeof(*s));
-    assert(s && "Out of memory");
+    kad_bucket_t *s = kad_alloc(1, sizeof(kad_bucket_t));
     kad_bucket_init(s, range_lower, range_upper, capacity);
     return s;
 }
@@ -66,7 +65,7 @@ void kad_bucket_add_replacement(kad_bucket_t *s, const kad_contact_t *c)
     }
 }
 
-void kad_bucket_remove_contact(kad_bucket_t *s, kad_id_t *id)
+void kad_bucket_remove_contact(kad_bucket_t *s, const kad_id_t *id)
 {
     kad_ordereddict_pop(&s->replacements, id, NULL);
     if (kad_ordereddict_pop(&s->contacts, id, NULL))
@@ -197,7 +196,7 @@ int kad_bucket_iter(const kad_bucket_t *s, int (*cb)(const kad_contact_t *c, voi
     return kad_ordereddict_iter(&s->contacts, cb, data);
 }
 
-bool kad_bucket_contains(const kad_bucket_t *s, kad_id_t *id)
+bool kad_bucket_contains(const kad_bucket_t *s, const kad_id_t *id)
 {
     return kad_ordereddict_contains(&s->contacts, id);
 }

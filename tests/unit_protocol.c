@@ -6,12 +6,11 @@
 
 #define TEST_HOST1 "0.0.0.0"
 #define TEST_PORT1 8090
+
 #define TEST_HOST2 "0.0.0.0"
 #define TEST_PORT2 8091
 
-static void *unit_protocol_setup(const MunitParameter params[], void *data);
-static void  unit_protocol_teardown(void *data);
-static void  ping_cb(bool ok, void *data);
+static void ping_cb(bool ok, void *result_p, void *data);
 
 MunitResult unit_protocol_send_ping(const MunitParameter params[], void *data)
 {
@@ -56,7 +55,7 @@ MunitResult unit_protocol_send_ping(const MunitParameter params[], void *data)
 }
 
 MunitTest unit_protocol_tests[] = {
-    {"/send_ping", unit_protocol_send_ping, unit_protocol_setup, unit_protocol_teardown, MUNIT_TEST_OPTION_NONE, NULL},
+    {"/send_ping", unit_protocol_send_ping, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
 };
 
@@ -64,28 +63,24 @@ MunitTest unit_protocol_tests[] = {
 // Static
 //
 
-void *unit_protocol_setup(const MunitParameter params[], void *data)
-{
-    return NULL;
-}
-
-void unit_protocol_teardown(void *data)
-{
-}
-
-void ping_cb(bool ok, void *data)
+void ping_cb(bool ok, void *result_p, void *data)
 {
     munit_assert_true(ok);
 
-    kad_debug("ping_cb");
+    bool         *flag = (bool *)(data);
+    kad_result_t *result = (kad_result_t *)(result_p);
+    munit_assert_int(result->type, ==, KAD_PING);
 
-    bool *flag = (bool *)(data);
     if (*flag == false) // First.
     {
+        kad_id_t server_id = {{2, 3, 4, 5, 6, 7, 8, 9}};
+        munit_assert_int(kad_uint256_cmp(&result->d.ping.id, &server_id), ==, 0);
         *flag = true;
     }
     else // Second.
     {
+        kad_id_t server_id = {{1, 2, 3, 4, 5, 6, 7, 8}};
+        munit_assert_int(kad_uint256_cmp(&result->d.ping.id, &server_id), ==, 0);
         uv_stop(uv_default_loop());
     }
 }

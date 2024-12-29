@@ -11,7 +11,7 @@ struct kad_uint256_s
     uint32_t d[256 / 32];
 };
 
-typedef const kad_uint256_t kad_id_t;
+typedef kad_uint256_t kad_id_t;
 
 // TODO: Consider using a library for this.
 int  kad_uint256_cmp(const kad_uint256_t *a, const kad_uint256_t *b);

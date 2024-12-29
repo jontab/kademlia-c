@@ -2,6 +2,7 @@
 #define KADEMLIA_PROTOCOL_H
 
 #include "list.h"
+#include "rpc.h"
 #include "table.h"
 #include "uint256.h"
 
@@ -16,18 +17,16 @@ typedef struct kad_find_node_args_s  kad_find_node_args_t;
 typedef struct kad_find_value_args_s kad_find_value_args_t;
 typedef struct kad_uv_protocol_s     kad_uv_protocol_t;
 
-typedef void (*kad_ping_cb_t)(bool ok, void *user);
-typedef void (*kad_store_cb_t)(bool ok, void *user);
-typedef void (*kad_find_node_cb_t)(bool ok, void *user);
-typedef void (*kad_find_value_cb_t)(bool ok, void *user);
+typedef void (*kad_resolve_t)(bool ok, void *result, void *user);
 
 KAD_GENERATE_LIST_HEADER(kad_promise_list, struct kad_promise_s *)
 
 struct kad_promise_s
 {
-    int id;
-    void (*resolve)(bool ok, void *user);
-    void *user;
+    int           id;
+    kad_resolve_t resolve;
+    void         *user;
+    int           type;
 };
 
 struct kad_ping_args_s
@@ -36,20 +35,42 @@ struct kad_ping_args_s
     kad_id_t       *id;
     const char     *host;
     int             port;
-    kad_ping_cb_t   callback;
+    kad_resolve_t   callback;
     void           *user;
 };
 
 struct kad_store_args_s
 {
+    kad_protocol_t *self;
+    kad_id_t       *id;
+    const char     *key;
+    const char     *value;
+    const char     *host;
+    int             port;
+    kad_resolve_t   callback;
+    void           *user;
 };
 
 struct kad_find_node_args_s
 {
+    kad_protocol_t *self;
+    kad_id_t       *id;
+    kad_id_t       *target_id;
+    const char     *host;
+    int             port;
+    kad_resolve_t   callback;
+    void           *user;
 };
 
 struct kad_find_value_args_s
 {
+    kad_protocol_t *self;
+    kad_id_t       *id;
+    const char     *key;
+    const char     *host;
+    int             port;
+    kad_resolve_t   callback;
+    void           *user;
 };
 
 struct kad_protocol_s

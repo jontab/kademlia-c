@@ -1,4 +1,5 @@
 #include "ordereddict.h"
+#include "alloc.h"
 #include "uint256.h"
 #include <assert.h>
 #include <stdio.h>
@@ -30,9 +31,7 @@ void kad_ordereddict_fini(kad_ordereddict_t *s)
 
 kad_ordereddict_t *kad_ordereddict_new(void)
 {
-    kad_ordereddict_t *s;
-    s = malloc(sizeof(*s));
-    assert(s && "Out of memory");
+    kad_ordereddict_t *s = kad_alloc(1, sizeof(kad_ordereddict_t));
     kad_ordereddict_init(s);
     return s;
 }
@@ -80,7 +79,7 @@ void kad_ordereddict_insert(kad_ordereddict_t *s, const kad_contact_t *c)
     }
 }
 
-bool kad_ordereddict_pop(kad_ordereddict_t *s, kad_id_t *id, kad_contact_t *out)
+bool kad_ordereddict_pop(kad_ordereddict_t *s, const kad_id_t *id, kad_contact_t *out)
 {
     if (!s->head)
     {
@@ -216,9 +215,7 @@ void kad_ordereddictnode_free(kad_ordereddictnode_t *n)
 
 kad_ordereddictnode_t *kad_ordereddictnode_new(const kad_contact_t *c, kad_ordereddictnode_t *next)
 {
-    kad_ordereddictnode_t *n;
-    n = malloc(sizeof(*n));
-    assert(n && "Out of memory");
+    kad_ordereddictnode_t *n = kad_alloc(1, sizeof(kad_ordereddictnode_t));
     n->c = *c;
     n->next = next;
     return n;
@@ -241,7 +238,7 @@ int kad_ordereddict_iter(const kad_ordereddict_t *s, int (*cb)(const kad_contact
     return ITER_CONT;
 }
 
-bool kad_ordereddict_contains(const kad_ordereddict_t *s, kad_id_t *id)
+bool kad_ordereddict_contains(const kad_ordereddict_t *s, const kad_id_t *id)
 {
     kad_ordereddictnode_t *curr = s->head;
     while (curr)

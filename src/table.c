@@ -1,4 +1,5 @@
 #include "table.h"
+#include "alloc.h"
 #include "log.h"
 #include "protocol.h"
 #include <assert.h>
@@ -10,12 +11,12 @@ typedef struct ping_callback_user_s ping_callback_user_t;
 
 struct find_closest_user_s
 {
-    kad_id_t      *id;
-    kad_id_t      *exclude;
-    int            capacity;
-    kad_contact_t *closest;
-    kad_uint256_t *distances;
-    int            nclosest;
+    const kad_id_t *id;
+    const kad_id_t *exclude;
+    int             capacity;
+    kad_contact_t  *closest;
+    kad_uint256_t  *distances;
+    int             nclosest;
 };
 
 struct ping_callback_user_s
@@ -26,18 +27,17 @@ struct ping_callback_user_s
 };
 
 static void kad_table_add_contact_inner(kad_table_t *s, const kad_contact_t *c, bool second);
-static void kad_table_add_contact_inner_ping_callback(bool ok, void *user);
+static void kad_table_add_contact_inner_ping_callback(bool ok, void *result, void *user);
 
 //
 // Public
 //
 
-void kad_table_init(kad_table_t *s, kad_id_t *id, int capacity)
+void kad_table_init(kad_table_t *s, const kad_id_t *id, int capacity)
 {
     s->id = *id;
     s->capacity = capacity;
-    s->buckets = malloc(sizeof(kad_bucket_t));
-    assert(s->buckets && "Out of memory");
+    s->buckets = kad_alloc(1, sizeof(kad_bucket_t));
 
     kad_uint256_t lo = {0};
     kad_uint256_t hi = {0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff};
@@ -62,7 +62,7 @@ void kad_table_set_protocol(kad_table_t *s, kad_protocol_t *protocol)
     s->protocol = protocol;
 }
 
-bool kad_table_contains(const kad_table_t *s, kad_id_t *id)
+bool kad_table_contains(const kad_table_t *s, const kad_id_t *id)
 {
     for (int bix = 0; bix < s->nbuckets; bix++)
     {
@@ -86,7 +86,7 @@ void kad_table_iter_expired_buckets(kad_table_t *s, void (*cb)(kad_bucket_t *b, 
     }
 }
 
-int kad_table_get_bucket_index(const kad_table_t *s, kad_id_t *id)
+int kad_table_get_bucket_index(const kad_table_t *s, const kad_id_t *id)
 {
     for (int bix = 0; bix < s->nbuckets; bix++)
     {
@@ -108,8 +108,7 @@ void kad_table_split_bucket(kad_table_t *s, int bix)
 {
     // Allocate space at index + 1.
     s->nbuckets++;
-    s->buckets = realloc(s->buckets, s->nbuckets * sizeof(s->buckets[0]));
-    assert(s->buckets && "Out of memory");
+    s->buckets = kad_realloc(s->buckets, s->nbuckets * sizeof(s->buckets[0]));
 
     // s->nbuckets = 3, bix = 1. s->nbuckets - bix - 2 = 0.
     // s->nbuckets = 3, bix = 0. s->nbuckets - bix - 2 = 1.
@@ -130,7 +129,7 @@ bool kad_table_can_split_bucket(const kad_table_t *s, const kad_bucket_t *b)
     return (above && below) || (kad_bucket_depth(b) % 5);
 }
 
-void kad_table_remove_contact(const kad_table_t *s, kad_id_t *id)
+void kad_table_remove_contact(const kad_table_t *s, const kad_id_t *id)
 {
     int           ix = kad_table_get_bucket_index(s, id);
     kad_bucket_t *bucket = &s->buckets[ix];
@@ -227,13 +226,12 @@ int kad_table_find_closest_inner(const kad_contact_t *c, void *data)
     }
 }
 
-void kad_table_find_closest(const kad_table_t *s, kad_id_t *id, kad_id_t *exclude,
+void kad_table_find_closest(const kad_table_t *s, const kad_id_t *id, const kad_id_t *exclude,
                             void (*cb)(const kad_contact_t *c, void *data), void *data)
 {
     find_closest_user_t user = {.id = id, .exclude = exclude, .capacity = s->capacity};
-    user.closest = malloc(s->capacity * sizeof(user.closest[0]));
-    user.distances = malloc(s->capacity * sizeof(user.distances[0]));
-    assert(user.closest && user.distances && "Out of memory");
+    user.closest = kad_alloc(s->capacity, sizeof(user.closest[0]));
+    user.distances = kad_alloc(s->capacity, sizeof(user.distances[0]));
 
     // Execute.
     int bix = kad_table_get_bucket_index(s, id);
@@ -289,7 +287,7 @@ void kad_table_add_contact_inner(kad_table_t *s, const kad_contact_t *c, bool se
     }
 }
 
-void kad_table_add_contact_inner_ping_callback(bool ok, void *user)
+void kad_table_add_contact_inner_ping_callback(bool ok, void *result, void *user)
 {
     if (ok)
     {

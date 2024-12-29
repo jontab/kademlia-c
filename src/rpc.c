@@ -194,6 +194,78 @@ char *create_ping_response(kad_id_t *server_id, int request_id)
     return out;
 }
 
+char *create_store_response(int request_id)
+{
+    cJSON *monitor = cJSON_CreateObject();
+    kad_check(monitor, "cJSON_CreateObject failed");
+
+    cJSON *ret;
+
+    ret = cJSON_AddStringToObject(monitor, "jsonrpc", "2.0");
+    kad_check(ret, "cJSON_AddStringToObject failed");
+    ret = cJSON_AddNullToObject(monitor, "result");
+    kad_check(ret, "cJSON_AddNullToObject failed");
+    ret = cJSON_AddNumberToObject(monitor, "id", request_id);
+    kad_check(ret, "cJSON_AddNumberToObject failed");
+
+    char *out = cJSON_PrintUnformatted(monitor);
+    kad_check(out, "cJSON_PrintUnformatted failed");
+    cJSON_Delete(monitor);
+    return out;
+}
+
+char *create_find_node_response(kad_contact_t *contacts, int size, int request_id)
+{
+    cJSON *monitor = cJSON_CreateObject();
+    kad_check(monitor, "cJSON_CreateObject failed");
+
+    cJSON     *ret;
+    cJSON     *resarray;
+    cJSON_bool retbool;
+
+    ret = cJSON_AddStringToObject(monitor, "jsonrpc", "2.0");
+    kad_check(ret, "cJSON_AddStringToObject failed");
+    ret = cJSON_AddNumberToObject(monitor, "id", request_id);
+    kad_check(ret, "cJSON_AddNumberToObject failed");
+    resarray = cJSON_AddArrayToObject(monitor, "result");
+    kad_check(ret, "cJSON_AddArrayToObject failed");
+
+    for (int i = 0; i < size; i++)
+    {
+        kad_contact_t *contact = &contacts[i];
+        cJSON         *contarray = cJSON_CreateArray();
+        kad_check(contarray, "cJSON_CreateArray failed");
+
+        // [contact->id, contact->host, contact->port].
+        char serialized_id[ID_SERIALIZE_LEN];
+        kad_id_serialize(&contact->id, serialized_id);
+
+        retbool = cJSON_AddItemToArray(contarray, cJSON_CreateString(serialized_id));
+        assert(retbool && "cJSON_AddItemToArray failed");
+        retbool = cJSON_AddItemToArray(contarray, cJSON_CreateString(contact->host));
+        assert(retbool && "cJSON_AddItemToArray failed");
+        retbool = cJSON_AddItemToArray(contarray, cJSON_CreateNumber((double)(contact->port)));
+        assert(retbool && "cJSON_AddItemToArray failed");
+
+        retbool = cJSON_AddItemToArray(resarray, contarray);
+        assert(retbool && "cJSON_AddItemToArray failed");
+    }
+
+    char *out = cJSON_PrintUnformatted(monitor);
+    kad_check(out, "cJSON_PrintUnformatted failed");
+    cJSON_Delete(monitor);
+    return out;
+}
+
+char *create_find_value_response(const char *value, kad_contact_t *contacts, int size, int request_id)
+{
+    return NULL;
+}
+
+//
+// Parsing
+//
+
 void *kad_payload_parse(const char *buf, int size)
 {
     parse_context_t *context = kad_alloc(1, sizeof(parse_context_t));
@@ -450,7 +522,7 @@ void kad_request_fini(kad_request_t *s, void *data)
 void kad_result_fini(kad_result_t *s, void *data)
 {
     if (s)
-    { 
+    {
         // TODO: Implement.
     }
 

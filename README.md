@@ -6,14 +6,16 @@ This is a work in-progress. I am writing it in C because I like the challenge.
 
 # External Dependencies
 
-The only external dependency that cannot be resolved via the `git submodule` command below is `libuv`. It is a cross-platform library used for asynchronous I/O operations.
+The two external dependencies that cannot be resolved via the `git submodule` command below are `libuv` and `openssl`. The first is a cross-platform library used for asynchronous I/O operations. The second is a library used for the SHA256 hash function.
 
 ```sh
 jonab@MacBookPro kademlia-c % brew install libuv
+jonab@MacBookPro kademlia-c % brew install openssl
 ```
 
 ```sh
 jonab@Ubuntu kademlia-c % sudo apt install libuv1-dev
+jonab@Ubuntu kademlia-c % sudo apt install [OPENSSL LIB NAME, libssl-dev?]
 ```
 
 # Building
@@ -21,9 +23,9 @@ jonab@Ubuntu kademlia-c % sudo apt install libuv1-dev
 We use standard CMake to build the library and testing suite. For example, these are the commands I run to test locally.
 
 ```sh
-jonab@MacBookPro kademlia-c % cmake -S . -B build
-jonab@MacBookPro kademlia-c % make -C build
-jonab@MacBookPro kademlia-c % ./build/kademlia-tests
+jonab@MacBookPro kademlia-c % cmake -S . -B ../kademlia-build
+jonab@MacBookPro kademlia-c % make -C ../kademlia-build
+jonab@MacBookPro kademlia-c % ../kademlia-build/kademlia-tests
 ```
 
 You might need to run this command beforehand to pull our submodules.
@@ -38,7 +40,7 @@ jonab@MacBookPro kademlia-c % git submodule update --init --recursive --depth=1
 - [x] Routing table (without protocol for replacing old peer).
 - [ ] Contact heap.
 - [ ] Crawler and contract crawler.
-- [ ] Protocol.
+- [x] Protocol.
 - [ ] Client.
 
 # Stretch goals

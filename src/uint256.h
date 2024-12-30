@@ -22,5 +22,6 @@ void kad_uint256_lsh(const kad_uint256_t *a, int amt, kad_uint256_t *out);
 void kad_uint256_add(const kad_uint256_t *a, const kad_uint256_t *b, kad_uint256_t *res);
 void kad_uint256_avg(const kad_uint256_t *a, const kad_uint256_t *b, kad_uint256_t *res);
 bool kad_uint256_iszero(const kad_uint256_t *a);
+void kad_uint256_from_key(const char *key, kad_uint256_t *out);
 
 #endif // KADEMLIA_UINT256_H

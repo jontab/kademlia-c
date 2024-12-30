@@ -39,6 +39,8 @@ find_path(LIBUV_INCLUDE_DIR NAMES uv.h)
 
 find_library(LIBUV_LIBRARIES NAMES uv libuv)
 
+find_package(OpenSSL REQUIRED)
+
 ##
 # kademlia-tests
 ##
@@ -53,7 +55,9 @@ target_include_directories(kademlia-tests PRIVATE
     ${LIBUV_INCLUDE_DIR})
 
 target_link_libraries(kademlia-tests
-    ${LIBUV_LIBRARIES})
+    ${LIBUV_LIBRARIES}
+    OpenSSL::SSL
+    OpenSSL::Crypto)
 
 target_compile_options(kademlia-tests PUBLIC
     -O0

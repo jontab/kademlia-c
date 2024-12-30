@@ -259,7 +259,50 @@ char *create_find_node_response(kad_contact_t *contacts, int size, int request_i
 
 char *create_find_value_response(const char *value, kad_contact_t *contacts, int size, int request_id)
 {
-    return NULL;
+    cJSON *monitor = cJSON_CreateObject();
+    kad_check(monitor, "cJSON_CreateObject failed");
+
+    cJSON     *ret;
+    cJSON     *resobj;
+    cJSON     *resarray;
+    cJSON_bool retbool;
+
+    ret = cJSON_AddStringToObject(monitor, "jsonrpc", "2.0");
+    kad_check(ret, "cJSON_AddStringToObject failed");
+    ret = cJSON_AddNumberToObject(monitor, "id", request_id);
+    kad_check(ret, "cJSON_AddNumberToObject failed");
+    resobj = cJSON_AddObjectToObject(monitor, "result");
+    kad_check(ret, "cJSON_AddArrayToObject failed");
+    ret = cJSON_AddStringToObject(resobj, "value", value);
+    kad_check(ret, "cJSON_AddStringToObject failed");
+    resarray = cJSON_AddArrayToObject(resobj, "contacts");
+    kad_check(resarray, "cJSON_AddArrayToObject failed");
+
+    for (int i = 0; i < size; i++)
+    {
+        kad_contact_t *contact = &contacts[i];
+        cJSON         *contarray = cJSON_CreateArray();
+        kad_check(contarray, "cJSON_CreateArray failed");
+
+        // [contact->id, contact->host, contact->port].
+        char serialized_id[ID_SERIALIZE_LEN];
+        kad_id_serialize(&contact->id, serialized_id);
+
+        retbool = cJSON_AddItemToArray(contarray, cJSON_CreateString(serialized_id));
+        assert(retbool && "cJSON_AddItemToArray failed");
+        retbool = cJSON_AddItemToArray(contarray, cJSON_CreateString(contact->host));
+        assert(retbool && "cJSON_AddItemToArray failed");
+        retbool = cJSON_AddItemToArray(contarray, cJSON_CreateNumber((double)(contact->port)));
+        assert(retbool && "cJSON_AddItemToArray failed");
+
+        retbool = cJSON_AddItemToArray(resarray, contarray);
+        assert(retbool && "cJSON_AddItemToArray failed");
+    }
+
+    char *out = cJSON_PrintUnformatted(monitor);
+    kad_check(out, "cJSON_PrintUnformatted failed");
+    cJSON_Delete(monitor);
+    return out;
 }
 
 //
@@ -455,6 +498,8 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
         return false;
     }
 
+    kad_debug("parsing %s\n", cJSON_PrintUnformatted(context->monitor));
+
     switch (type)
     {
     case KAD_PING: {
@@ -475,10 +520,143 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
     }
     case KAD_STORE:
         break;
-    case KAD_FIND_NODE:
+    case KAD_FIND_NODE: {
+        if (!cJSON_IsArray(context->p_result))
+        {
+            kad_warn("kad_payload_parse_result: find_node: result is not an array\n");
+            return false;
+        }
+
+        out->d.find_node.size = cJSON_GetArraySize(context->p_result);
+        out->d.find_node.contacts = kad_alloc(out->d.find_node.size, sizeof(kad_contact_t));
+        for (int i = 0; i < out->d.find_node.size; i++)
+        {
+            cJSON *contarray = cJSON_GetArrayItem(context->p_result, i);
+            if (!contarray || !cJSON_IsArray(contarray))
+            {
+                kad_warn("kad_payload_parse_result: find_node: failed to get array item\n");
+                free(out->d.find_node.contacts);
+                return false;
+            }
+
+            cJSON *p_id = cJSON_GetArrayItem(contarray, 0);
+            cJSON *p_host = cJSON_GetArrayItem(contarray, 1);
+            cJSON *p_port = cJSON_GetArrayItem(contarray, 2);
+            if (!p_id || !cJSON_IsString(p_id))
+            {
+                kad_warn("kad_payload_parse_result: find_node: id is not a string\n");
+                free(out->d.find_node.contacts);
+                return false;
+            }
+
+            if (!p_host || !cJSON_IsString(p_host))
+            {
+                kad_warn("kad_payload_parse_result: find_node: host is not a string\n");
+                free(out->d.find_node.contacts);
+                return false;
+            }
+
+            if (!p_port || !cJSON_IsNumber(p_port))
+            {
+                kad_warn("kad_payload_parse_result: find_node: port is not a number\n");
+                free(out->d.find_node.contacts);
+                return false;
+            }
+
+            char *s_id = cJSON_GetStringValue(p_id);
+            char *s_host = cJSON_GetStringValue(p_host);
+            if (!kad_id_deserialize(s_id, &out->d.find_node.contacts[i].id))
+            {
+                kad_warn("kad_payload_parse_result: find_node: failed to deserialize id\n");
+                free(out->d.find_node.contacts);
+                return false;
+            }
+
+            memcpy(&out->d.find_node.contacts[i].host, s_host, sizeof(out->d.find_node.contacts[i].host) - 1);
+            out->d.find_node.contacts[i].port = (int)(cJSON_GetNumberValue(p_port));
+        }
+
         break;
-    case KAD_FIND_VALUE:
+    }
+    case KAD_FIND_VALUE: {
+        if (!cJSON_IsObject(context->p_result))
+        {
+            kad_warn("kad_payload_parse_result: find_value: result is not an object\n");
+            return false;
+        }
+
+        cJSON *p_value = cJSON_GetObjectItem(context->p_result, "value");
+        cJSON *p_contacts = cJSON_GetObjectItem(context->p_result, "contacts");
+        if (!p_value || !(cJSON_IsNull(p_value) || cJSON_IsString(p_value)))
+        {
+            kad_warn("kad_payload_parse_result: find_value: value is neither null nor string\n");
+            return false;
+        }
+
+        if (!p_contacts || !cJSON_IsArray(p_contacts))
+        {
+            kad_warn("kad_payload_parse_result: find_value: contacts is not an array\n");
+            return false;
+        }
+
+        out->d.find_value.size = cJSON_GetArraySize(p_contacts);
+        out->d.find_value.contacts = kad_alloc(out->d.find_value.size, sizeof(kad_contact_t));
+        for (int i = 0; i < out->d.find_value.size; i++)
+        {
+            cJSON *contarray = cJSON_GetArrayItem(p_contacts, i);
+            if (!contarray || !cJSON_IsArray(contarray))
+            {
+                kad_warn("kad_payload_parse_result: find_value: failed to get array item\n");
+                free(out->d.find_value.contacts);
+                return false;
+            }
+
+            cJSON *p_id = cJSON_GetArrayItem(contarray, 0);
+            cJSON *p_host = cJSON_GetArrayItem(contarray, 1);
+            cJSON *p_port = cJSON_GetArrayItem(contarray, 2);
+            if (!p_id || !cJSON_IsString(p_id))
+            {
+                kad_warn("kad_payload_parse_result: find_value: id is not a string\n");
+                free(out->d.find_value.contacts);
+                return false;
+            }
+
+            if (!p_host || !cJSON_IsString(p_host))
+            {
+                kad_warn("kad_payload_parse_result: find_value: host is not a string\n");
+                free(out->d.find_value.contacts);
+                return false;
+            }
+
+            if (!p_port || !cJSON_IsNumber(p_port))
+            {
+                kad_warn("kad_payload_parse_result: find_value: port is not a number\n");
+                free(out->d.find_value.contacts);
+                return false;
+            }
+
+            char *s_id = cJSON_GetStringValue(p_id);
+            char *s_host = cJSON_GetStringValue(p_host);
+            if (!kad_id_deserialize(s_id, &out->d.find_node.contacts[i].id))
+            {
+                kad_warn("kad_payload_parse_result: find_value: failed to deserialize id\n");
+                free(out->d.find_value.contacts);
+                return false;
+            }
+
+            memcpy(&out->d.find_value.contacts[i].host, s_host, sizeof(out->d.find_value.contacts[i].host) - 1);
+            out->d.find_value.contacts[i].port = (int)(cJSON_GetNumberValue(p_port));
+        }
+
+        out->d.find_value.value = NULL;
+        if (cJSON_IsString(p_value))
+        {
+            out->d.find_value.value = strdup(cJSON_GetStringValue(p_value));
+            kad_check(out->d.find_value.value, "cJSON_GetStringValue failed");
+        }
+
         break;
+    }
     default:
         kad_warn("kad_payload_parse_result: unhandled type: %d\n", type);
         break;
@@ -523,7 +701,22 @@ void kad_result_fini(kad_result_t *s, void *data)
 {
     if (s)
     {
-        // TODO: Implement.
+        switch (s->type)
+        {
+        case KAD_FIND_NODE:
+            free(s->d.find_node.contacts);
+            break;
+        case KAD_FIND_VALUE:
+            if (s->d.find_value.value)
+            {
+                free(s->d.find_value.value);
+            }
+
+            free(s->d.find_value.contacts);
+            break;
+        default:
+            break;
+        }
     }
 
     if (data)

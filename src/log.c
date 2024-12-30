@@ -47,7 +47,7 @@ void kad_printf(const char *fmt, ...)
                 kad_printf("Contact\n");
                 kad_printf("  id:   %U\n", &cval->id);
                 kad_printf("  host: %s\n", cval->host);
-                kad_printf("  port: %s", cval->port);
+                kad_printf("  port: %d\n", cval->port);
                 break;
             }
 

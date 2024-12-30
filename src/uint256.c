@@ -1,5 +1,8 @@
 #include "uint256.h"
 #include "log.h"
+#include <openssl/sha.h>
+#include <stdlib.h>
+#include <string.h>
 
 int kad_uint256_cmp(const kad_uint256_t *a, const kad_uint256_t *b)
 {
@@ -108,4 +111,37 @@ bool kad_uint256_iszero(const kad_uint256_t *a)
     res |= a->d[6];
     res |= a->d[7];
     return res == 0;
+}
+
+void kad_uint256_from_key(const char *key, kad_uint256_t *out)
+{
+    unsigned char digest[SHA256_DIGEST_LENGTH];
+
+    SHA256_CTX sha256;
+    if (SHA256_Init(&sha256) < 0)
+    {
+        kad_fatal("SHA256_Init failed");
+        abort();
+    }
+
+    if (SHA256_Update(&sha256, key, strlen(key)) < 0)
+    {
+        kad_fatal("SHA256_Update failed");
+        abort();
+    }
+
+    if (SHA256_Final(digest, &sha256) < 0)
+    {
+        kad_fatal("SHA256_Final failed");
+        abort();
+    }
+
+    for (int i = 0; i < 8; i++)
+    {
+        out->d[i] = 0;
+        out->d[i] |= digest[i * 4 + 0] << 3;
+        out->d[i] |= digest[i * 4 + 1] << 2;
+        out->d[i] |= digest[i * 4 + 2] << 1;
+        out->d[i] |= digest[i * 4 + 3] << 0;
+    }
 }

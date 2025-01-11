@@ -1,5 +1,6 @@
 #include "nodecrawler.h"
 #include "../alloc.h"
+#include "log.h"
 
 //
 // Typedefs
@@ -26,6 +27,7 @@ struct n_findcontext_s
     kad_nodecrawler_t *s;
     n_findresults_t   *results;
     int                i;
+    int                ndispatched;
 
     // Handle.
     kad_nodecrawlercb_t gotresult;
@@ -37,9 +39,9 @@ struct n_nodecontext_s
     kad_nodecrawler_t *s;
     n_findresults_t   *results;
     kad_id_t           id;
+    int                ndispatched;
 
     // Handle.
-    const char         *key;
     kad_nodecrawlercb_t gotresult;
     void               *gotresultuser;
 };
@@ -50,24 +52,27 @@ struct n_nodecontext_s
 
 static void kad_nodecrawler_handle(kad_nodecrawler_t *s, n_findresults_t *results, kad_nodecrawlercb_t cb, void *user);
 static void kad_nodecrawler_find_unmarked_cb(const kad_contact_t *unmarked, void *user);
+static void kad_nodecrawler_find_unmarked_length(const kad_contact_t *unmarked, void *user);
 static void kad_nodecrawler_find_node_cb(bool ok, void *result, void *user);
 
 //
 // Public
 //
 
-void kad_nodecrawler_init(kad_nodecrawler_t *s, kad_nodecrawlerargs_t args)
+void kad_nodecrawler_init(kad_nodecrawler_t *s, const kad_nodecrawlerargs_t *args)
 {
-    s->id = args.id;
-    s->capacity = args.capacity;
-    s->alpha = args.alpha;
-
-    kad_id_t target;
-    kad_uint256_from_key(args.key, &target);
-    kad_contactheap_init(&s->nearest, &target, args.capacity);
-
-    s->proto = args.proto;
+    s->id = args->id;
+    s->target = args->target;
+    s->capacity = args->capacity;
+    s->alpha = args->alpha;
+    kad_contactheap_init(&s->nearest, &s->target, args->capacity);
+    s->proto = args->proto;
     kad_contactset_init(&s->ignore);
+
+    for (int i = 0; i < args->contacts_size; i++)
+    {
+        kad_contactheap_push(&s->nearest, &args->contacts[i]);
+    }
 }
 
 void kad_nodecrawler_fini(kad_nodecrawler_t *s)
@@ -82,11 +87,18 @@ void kad_nodecrawler_find(kad_nodecrawler_t *s, kad_nodecrawlercb_t cb, void *us
     n_findcontext_t findcontext = {
         .s = s,
         .results = kad_alloc(1, sizeof(n_findresults_t)),
+        .ndispatched = 0,
 
         // Handle.
         .gotresult = cb,
         .gotresultuser = user,
     };
+
+    // Alpha is our request concurrency --- we need to know when we've received all of the responses we were expecting
+    // in downstream code. So we get that number here.
+    kad_contactheap_unmarked(&s->nearest, kad_nodecrawler_find_unmarked_length, &findcontext.ndispatched);
+    findcontext.ndispatched = MIN(findcontext.ndispatched, s->alpha);
+
     kad_contactheap_unmarked(&s->nearest, kad_nodecrawler_find_unmarked_cb, &findcontext);
 }
 
@@ -107,10 +119,13 @@ void kad_nodecrawler_handle(kad_nodecrawler_t *s, n_findresults_t *results, kad_
         }
 
         // Contacts.
-        kad_contact_t *gotcontact = &results->data[i].d.find_node.contacts[i];
-        if (!kad_contactset_contains(&s->ignore, &gotcontact->id))
+        for (int j = 0; j < results->data[i].d.find_node.size; j++)
         {
-            kad_contactheap_push(&s->nearest, gotcontact);
+            kad_contact_t *gotcontact = &results->data[i].d.find_node.contacts[j];
+            if (!kad_contactset_contains(&s->ignore, &gotcontact->id))
+            {
+                kad_contactheap_push(&s->nearest, gotcontact);
+            }
         }
     }
 
@@ -123,23 +138,31 @@ void kad_nodecrawler_handle(kad_nodecrawler_t *s, n_findresults_t *results, kad_
     kad_nodecrawler_find(s, cb, data);
 }
 
+void kad_nodecrawler_find_unmarked_length(const kad_contact_t *unmarked, void *user)
+{
+    int *count = (int *)(user);
+    (*count)++;
+}
+
 void kad_nodecrawler_find_unmarked_cb(const kad_contact_t *unmarked, void *user)
 {
     n_findcontext_t *fc = (n_findcontext_t *)(user);
-    if (fc->i < fc->s->alpha)
+    if (fc->i < fc->ndispatched)
     {
         n_nodecontext_t *vc = kad_alloc(1, sizeof(n_nodecontext_t));
         *vc = (n_nodecontext_t){
             .s = fc->s,
             .results = fc->results,
             .id = unmarked->id,
+            .ndispatched = fc->ndispatched,
             .gotresult = fc->gotresult,
             .gotresultuser = fc->gotresultuser,
         };
 
-        fc->s->proto->find_value(&(kad_find_value_args_t){
+        fc->s->proto->find_node(&(kad_find_node_args_t){
             .self = fc->s->proto,
             .id = &fc->s->id,
+            .target_id = &fc->s->target,
             .host = unmarked->host,
             .port = unmarked->port,
             .callback = kad_nodecrawler_find_node_cb,
@@ -156,7 +179,10 @@ void kad_nodecrawler_find_node_cb(bool ok, void *result, void *user)
 
     c->results->size++;
     c->results->ids = kad_realloc(c->results->ids, c->results->size * sizeof(kad_id_t));
+    c->results->oks = kad_realloc(c->results->oks, c->results->size * sizeof(bool));
     c->results->data = kad_realloc(c->results->data, c->results->size * sizeof(kad_result_t));
+
+    kad_info("find_node: got incremental result\n");
 
     if (ok)
     {
@@ -171,8 +197,9 @@ void kad_nodecrawler_find_node_cb(bool ok, void *result, void *user)
         c->results->data[c->results->size - 1] = (kad_result_t){0};
     }
 
-    if (c->results->size == c->s->alpha)
+    if (c->results->size == c->ndispatched)
     {
+        kad_info("find_node: gathered %d results\n", c->ndispatched);
         kad_nodecrawler_handle(c->s, c->results, c->gotresult, c->gotresultuser);
         free(c->results);
     }

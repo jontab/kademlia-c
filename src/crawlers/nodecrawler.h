@@ -21,6 +21,7 @@ typedef void (*kad_nodecrawlercb_t)(const kad_contact_t *c, void *user);
 struct kad_nodecrawler_s
 {
     kad_id_t          id;
+    kad_id_t          target;
     int               capacity;
     int               alpha;
     kad_contactheap_t nearest;
@@ -31,11 +32,11 @@ struct kad_nodecrawler_s
 struct kad_nodecrawlerargs_s
 {
     kad_id_t             id;
-    const char          *key;
+    kad_id_t             target;
     int                  capacity;
     int                  alpha;
-    const kad_contact_t *contacts;
-    int                  contacts_size;
+    const kad_contact_t *contacts;      // To initialize heap.
+    int                  contacts_size; // To initialize heap.
     kad_protocol_t      *proto;
 };
 
@@ -43,7 +44,7 @@ struct kad_nodecrawlerargs_s
 // Methods
 //
 
-void kad_nodecrawler_init(kad_nodecrawler_t *s, kad_nodecrawlerargs_t args);
+void kad_nodecrawler_init(kad_nodecrawler_t *s, const kad_nodecrawlerargs_t *args);
 void kad_nodecrawler_fini(kad_nodecrawler_t *s);
 void kad_nodecrawler_find(kad_nodecrawler_t *s, kad_nodecrawlercb_t cb, void *user);
 

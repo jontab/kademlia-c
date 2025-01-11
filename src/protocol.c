@@ -414,7 +414,7 @@ void recv_cb_request_add_contact(kad_uv_protocol_t *self, kad_id_t *id, const st
 
         // Add to table.
         kad_table_add_contact(self->table, &sender);
-        kad_error("Added contact: %C\n", &sender);
+        kad_info("added caller to contacts: %C\n", &sender);
     }
 }
 

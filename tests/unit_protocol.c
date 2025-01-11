@@ -24,8 +24,8 @@ MunitResult unit_protocol_send_ping(const MunitParameter params[], void *data)
     kad_table_t table_2;
     kad_table_init(&table_1, &(kad_id_t){{1, 2, 3, 4, 5, 6, 7, 8}}, 8);
     kad_table_init(&table_2, &(kad_id_t){{2, 3, 4, 5, 6, 7, 8, 9}}, 9);
-    kad_uv_protocol_t *protocol_1 = kad_uv_protocol_new(uv_default_loop(), &table_1);
-    kad_uv_protocol_t *protocol_2 = kad_uv_protocol_new(uv_default_loop(), &table_2);
+    kad_uv_protocol_t *protocol_1 = kad_uv_protocol_new(uv_default_loop(), &table_1, NULL);
+    kad_uv_protocol_t *protocol_2 = kad_uv_protocol_new(uv_default_loop(), &table_2, NULL);
     kad_uv_protocol_start(protocol_1, TEST_HOST1, test_port1);
     kad_uv_protocol_start(protocol_2, TEST_HOST2, test_port2);
 
@@ -69,7 +69,7 @@ MunitResult unit_protocol_send_ping_timeout(const MunitParameter params[], void 
     // Setup.
     kad_table_t table_1;
     kad_table_init(&table_1, &(kad_id_t){{1, 2, 3, 4, 5, 6, 7, 8}}, 8);
-    kad_uv_protocol_t *protocol_1 = kad_uv_protocol_new(uv_default_loop(), &table_1);
+    kad_uv_protocol_t *protocol_1 = kad_uv_protocol_new(uv_default_loop(), &table_1, NULL);
     kad_table_set_protocol(&table_1, (kad_protocol_t *)(protocol_1));
     kad_uv_protocol_start(protocol_1, TEST_HOST1, test_port1);
 
@@ -102,8 +102,8 @@ MunitResult unit_protocol_send_store(const MunitParameter params[], void *data)
     kad_table_t table_2;
     kad_table_init(&table_1, &(kad_id_t){{1, 2, 3, 4, 5, 6, 7, 8}}, 8);
     kad_table_init(&table_2, &(kad_id_t){{2, 3, 4, 5, 6, 7, 8, 9}}, 9);
-    kad_uv_protocol_t *protocol_1 = kad_uv_protocol_new(uv_default_loop(), &table_1);
-    kad_uv_protocol_t *protocol_2 = kad_uv_protocol_new(uv_default_loop(), &table_2);
+    kad_uv_protocol_t *protocol_1 = kad_uv_protocol_new(uv_default_loop(), &table_1, NULL);
+    kad_uv_protocol_t *protocol_2 = kad_uv_protocol_new(uv_default_loop(), &table_2, NULL);
     kad_uv_protocol_start(protocol_1, TEST_HOST1, test_port1);
     kad_uv_protocol_start(protocol_2, TEST_HOST2, test_port2);
 
@@ -142,8 +142,8 @@ MunitResult unit_protocol_send_find_node(const MunitParameter params[], void *da
     kad_table_t table_2;
     kad_table_init(&table_1, &(kad_id_t){{1, 2, 3, 4, 5, 6, 7, 8}}, 8);
     kad_table_init(&table_2, &(kad_id_t){{2, 3, 4, 5, 6, 7, 8, 9}}, 8);
-    kad_uv_protocol_t *protocol_1 = kad_uv_protocol_new(uv_default_loop(), &table_1);
-    kad_uv_protocol_t *protocol_2 = kad_uv_protocol_new(uv_default_loop(), &table_2);
+    kad_uv_protocol_t *protocol_1 = kad_uv_protocol_new(uv_default_loop(), &table_1, NULL);
+    kad_uv_protocol_t *protocol_2 = kad_uv_protocol_new(uv_default_loop(), &table_2, NULL);
     kad_uv_protocol_start(protocol_1, TEST_HOST1, test_port1);
     kad_uv_protocol_start(protocol_2, TEST_HOST2, test_port2);
 
@@ -196,8 +196,8 @@ MunitResult unit_protocol_send_find_value(const MunitParameter params[], void *d
     kad_table_t table_2;
     kad_table_init(&table_1, &(kad_id_t){{1, 2, 3, 4, 5, 6, 7, 8}}, 8);
     kad_table_init(&table_2, &(kad_id_t){{2, 3, 4, 5, 6, 7, 8, 9}}, 8);
-    kad_uv_protocol_t *protocol_1 = kad_uv_protocol_new(uv_default_loop(), &table_1);
-    kad_uv_protocol_t *protocol_2 = kad_uv_protocol_new(uv_default_loop(), &table_2);
+    kad_uv_protocol_t *protocol_1 = kad_uv_protocol_new(uv_default_loop(), &table_1, NULL);
+    kad_uv_protocol_t *protocol_2 = kad_uv_protocol_new(uv_default_loop(), &table_2, NULL);
     kad_uv_protocol_start(protocol_1, TEST_HOST1, test_port1);
     kad_uv_protocol_start(protocol_2, TEST_HOST2, test_port2);
 

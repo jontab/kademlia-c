@@ -1,6 +1,7 @@
 #include "alloc.h"
 #include "log.h"
 #include <stdlib.h>
+#include <string.h>
 
 void *kad_alloc(size_t count, size_t size)
 {
@@ -23,4 +24,11 @@ void kad_check(void *data, const char *message)
         kad_fatal("%s\n", message);
         abort();
     }
+}
+
+char *kad_strdup(const char *data)
+{
+    char *copy = strdup(data);
+    kad_check(copy, "kad_strdup failed");
+    return copy;
 }

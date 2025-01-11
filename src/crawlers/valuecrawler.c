@@ -1,12 +1,13 @@
 #include "valuecrawler.h"
 #include "../alloc.h"
+#include "log.h"
 
 //
 // Typedefs
 //
 
-typedef struct n_findresults_s  n_findresults_t;
-typedef struct n_findcontext_s  n_findcontext_t;
+typedef struct n_findresults_s n_findresults_t;
+typedef struct n_findcontext_s n_findcontext_t;
 typedef struct n_nodecontext_s n_nodecontext_t;
 
 //
@@ -24,11 +25,11 @@ struct n_findresults_s
 struct n_findcontext_s
 {
     kad_valuecrawler_t *s;
-    n_findresults_t      *results;
+    n_findresults_t    *results;
     int                 i;
+    int                 ndispatched;
 
     // Handle.
-    const char          *key;
     kad_valuecrawlercb_t gotvalue;
     void                *gotvalueuser;
 };
@@ -36,11 +37,11 @@ struct n_findcontext_s
 struct n_nodecontext_s
 {
     kad_valuecrawler_t *s;
-    n_findresults_t      *results;
+    n_findresults_t    *results;
     kad_id_t            id;
+    int                 ndispatched;
 
     // Handle.
-    const char          *key;
     kad_valuecrawlercb_t gotvalue;
     void                *gotvalueuser;
 };
@@ -49,28 +50,34 @@ struct n_nodecontext_s
 // Decls
 //
 
-static void kad_valuecrawler_handle(kad_valuecrawler_t *s, n_findresults_t *results, const char *key,
-                                    kad_valuecrawlercb_t cb, void *user);
+static void kad_valuecrawler_handle(kad_valuecrawler_t *s, n_findresults_t *results, kad_valuecrawlercb_t cb,
+                                    void *user);
 static void kad_valuecrawler_find_unmarked_cb(const kad_contact_t *unmarked, void *user);
+static void kad_valuecrawler_find_unmarked_length(const kad_contact_t *unmarked, void *user);
 static void kad_valuecrawler_find_value_cb(bool ok, void *result, void *user);
 
 //
 // Public
 //
 
-void kad_valuecrawler_init(kad_valuecrawler_t *s, kad_valuecrawlerargs_t args)
+void kad_valuecrawler_init(kad_valuecrawler_t *s, const kad_valuecrawlerargs_t *args)
 {
-    s->id = args.id;
-    s->key = args.key;
-    s->capacity = args.capacity;
-    s->alpha = args.alpha;
+    s->id = args->id;
+    s->key = args->key;
+    s->capacity = args->capacity;
+    s->alpha = args->alpha;
 
     kad_id_t target;
-    kad_uint256_from_key(args.key, &target);
-    kad_contactheap_init(&s->nearest, &target, args.capacity);
+    kad_uint256_from_key(args->key, &target);
+    kad_contactheap_init(&s->nearest, &target, args->capacity);
 
-    s->proto = args.proto;
+    s->proto = args->proto;
     kad_contactset_init(&s->ignore);
+
+    for (int i = 0; i < args->contacts_size; i++)
+    {
+        kad_contactheap_push(&s->nearest, &args->contacts[i]);
+    }
 }
 
 void kad_valuecrawler_fini(kad_valuecrawler_t *s)
@@ -80,17 +87,23 @@ void kad_valuecrawler_fini(kad_valuecrawler_t *s)
     memset(s, 0, sizeof(*s));
 }
 
-void kad_valuecrawler_find(kad_valuecrawler_t *s, const char *key, kad_valuecrawlercb_t cb, void *user)
+void kad_valuecrawler_find(kad_valuecrawler_t *s, kad_valuecrawlercb_t cb, void *user)
 {
     n_findcontext_t findcontext = {
         .s = s,
         .results = kad_alloc(1, sizeof(n_findresults_t)),
+        .ndispatched = 0,
 
         // Handle.
-        .key = key,
         .gotvalue = cb,
         .gotvalueuser = user,
     };
+
+    // Alpha is our request concurrency --- we need to know when we've received all of the responses we were expecting
+    // in downstream code. So we get that number here.
+    kad_contactheap_unmarked(&s->nearest, kad_valuecrawler_find_unmarked_length, &findcontext.ndispatched);
+    findcontext.ndispatched = MIN(findcontext.ndispatched, s->alpha);
+
     kad_contactheap_unmarked(&s->nearest, kad_valuecrawler_find_unmarked_cb, &findcontext);
 }
 
@@ -98,8 +111,7 @@ void kad_valuecrawler_find(kad_valuecrawler_t *s, const char *key, kad_valuecraw
 // Statics
 //
 
-void kad_valuecrawler_handle(kad_valuecrawler_t *s, n_findresults_t *results, const char *key, kad_valuecrawlercb_t cb,
-                             void *data)
+void kad_valuecrawler_handle(kad_valuecrawler_t *s, n_findresults_t *results, kad_valuecrawlercb_t cb, void *data)
 {
     for (int i = 0; i < results->size; i++)
     {
@@ -119,10 +131,13 @@ void kad_valuecrawler_handle(kad_valuecrawler_t *s, n_findresults_t *results, co
         }
 
         // Contacts.
-        kad_contact_t *gotcontact = &results->data[i].d.find_value.contacts[i];
-        if (!kad_contactset_contains(&s->ignore, &gotcontact->id))
+        for (int j = 0; j < results->data[i].d.find_value.size; j++)
         {
-            kad_contactheap_push(&s->nearest, gotcontact);
+            kad_contact_t *gotcontact = &results->data[i].d.find_value.contacts[j];
+            if (!kad_contactset_contains(&s->ignore, &gotcontact->id))
+            {
+                kad_contactheap_push(&s->nearest, gotcontact);
+            }
         }
     }
 
@@ -132,7 +147,7 @@ void kad_valuecrawler_handle(kad_valuecrawler_t *s, n_findresults_t *results, co
         return;
     }
 
-    kad_valuecrawler_find(s, key, cb, data);
+    kad_valuecrawler_find(s, cb, data);
 }
 
 void kad_valuecrawler_find_unmarked_cb(const kad_contact_t *unmarked, void *user)
@@ -145,6 +160,7 @@ void kad_valuecrawler_find_unmarked_cb(const kad_contact_t *unmarked, void *user
             .s = fc->s,
             .results = fc->results,
             .id = unmarked->id,
+            .ndispatched = fc->ndispatched,
             .gotvalue = fc->gotvalue,
             .gotvalueuser = fc->gotvalueuser,
         };
@@ -163,12 +179,21 @@ void kad_valuecrawler_find_unmarked_cb(const kad_contact_t *unmarked, void *user
     fc->i++;
 }
 
+void kad_valuecrawler_find_unmarked_length(const kad_contact_t *unmarked, void *user)
+{
+    int *count = (int *)(user);
+    (*count)++;
+}
+
 void kad_valuecrawler_find_value_cb(bool ok, void *result, void *user)
 {
     n_nodecontext_t *c = (n_nodecontext_t *)(user);
 
+    kad_debug("find_value_cb: got incremental result\n");
+
     c->results->size++;
     c->results->ids = kad_realloc(c->results->ids, c->results->size * sizeof(kad_id_t));
+    c->results->oks = kad_realloc(c->results->oks, c->results->size * sizeof(bool));
     c->results->data = kad_realloc(c->results->data, c->results->size * sizeof(kad_result_t));
 
     if (ok)
@@ -184,9 +209,10 @@ void kad_valuecrawler_find_value_cb(bool ok, void *result, void *user)
         c->results->data[c->results->size - 1] = (kad_result_t){0};
     }
 
-    if (c->results->size == c->s->alpha)
+    if (c->results->size == c->ndispatched)
     {
-        kad_valuecrawler_handle(c->s, c->results, c->key, c->gotvalue, c->gotvalueuser);
+        kad_debug("find_value_cb: got all results\n");
+        kad_valuecrawler_handle(c->s, c->results, c->gotvalue, c->gotvalueuser);
         free(c->results);
     }
 

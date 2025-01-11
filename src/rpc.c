@@ -273,8 +273,18 @@ char *create_find_value_response(const char *value, kad_contact_t *contacts, int
     kad_check(ret, "cJSON_AddNumberToObject failed");
     resobj = cJSON_AddObjectToObject(monitor, "result");
     kad_check(ret, "cJSON_AddArrayToObject failed");
-    ret = cJSON_AddStringToObject(resobj, "value", value);
-    kad_check(ret, "cJSON_AddStringToObject failed");
+
+    if (value)
+    {
+        ret = cJSON_AddStringToObject(resobj, "value", value);
+        kad_check(ret, "cJSON_AddStringToObject failed");
+    }
+    else
+    {
+        ret = cJSON_AddNullToObject(resobj, "value");
+        kad_check(ret, "cJSON_AddNullToObject failed");
+    }
+
     resarray = cJSON_AddArrayToObject(resobj, "contacts");
     kad_check(resarray, "cJSON_AddArrayToObject failed");
 
@@ -637,7 +647,7 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
 
             char *s_id = cJSON_GetStringValue(p_id);
             char *s_host = cJSON_GetStringValue(p_host);
-            if (!kad_id_deserialize(s_id, &out->d.find_node.contacts[i].id))
+            if (!kad_id_deserialize(s_id, &out->d.find_value.contacts[i].id))
             {
                 kad_warn("kad_payload_parse_result: find_value: failed to deserialize id\n");
                 free(out->d.find_value.contacts);

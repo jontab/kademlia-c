@@ -5,6 +5,7 @@
 #include "rpc.h"
 #include "table.h"
 #include "uint256.h"
+#include "storage.h"
 
 #include <stdbool.h>
 #include <uv.h>
@@ -88,9 +89,10 @@ struct kad_uv_protocol_s
     uv_loop_t         *loop;
     uv_udp_t           socket;
     kad_table_t       *table;
+    kad_storage_t     *storage;
 };
 
-kad_uv_protocol_t *kad_uv_protocol_new(uv_loop_t *loop, kad_table_t *table);
+kad_uv_protocol_t *kad_uv_protocol_new(uv_loop_t *loop, kad_table_t *table, kad_storage_t *storage);
 void               kad_uv_protocol_free(kad_uv_protocol_t *self);
 void               kad_uv_protocol_start(kad_uv_protocol_t *self, const char *host, int port);
 

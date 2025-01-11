@@ -66,7 +66,7 @@ static void uv_buf_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *b
 // Public
 //
 
-kad_uv_protocol_t *kad_uv_protocol_new(uv_loop_t *loop, kad_table_t *table)
+kad_uv_protocol_t *kad_uv_protocol_new(uv_loop_t *loop, kad_table_t *table, kad_storage_t *storage)
 {
     kad_uv_protocol_t *self = kad_alloc(1, sizeof(kad_uv_protocol_t));
     self->base = (kad_protocol_t){
@@ -77,6 +77,7 @@ kad_uv_protocol_t *kad_uv_protocol_new(uv_loop_t *loop, kad_table_t *table)
     };
     self->loop = loop;
     self->table = table;
+    self->storage = storage;
     return self;
 }
 
@@ -457,9 +458,10 @@ void recv_cb_request_store(uv_udp_t *handle, kad_request_t *req, const struct so
     // Execute.
     recv_cb_request_add_contact(self, &req->d.store.id, addr);
 
-    //
-    // TODO: Do the actual storing.
-    //
+    if (self->storage)
+    {
+        kad_storage_put(self->storage, req->d.store.key, req->d.store.value);
+    }
 
     // Send.
     uv_buf_t response_buf = uv_buf_init(send_context->payload_str, strlen(send_context->payload_str) + 1);
@@ -515,7 +517,6 @@ void recv_cb_request_find_value(uv_udp_t *handle, kad_request_t *req, const stru
 
     // Execute.
     recv_cb_request_add_contact(self, &req->d.find_value.id, addr);
-    kad_error("found contact: '%U'\n", &req->d.find_value.id);
 
     kad_id_t target_id;
     kad_uint256_from_key(req->d.find_value.key, &target_id);
@@ -529,13 +530,8 @@ void recv_cb_request_find_value(uv_udp_t *handle, kad_request_t *req, const stru
     // Setup.
     uv_udp_send_t           *send_request = kad_alloc(1, sizeof(uv_udp_send_t));
     send_response_context_t *send_context = kad_alloc(1, sizeof(send_response_context_t));
-
-    //
-    // TODO: Do the actual value-getting.
-    //
-
-    send_context->payload_str = create_find_value_response("dummyvalue", find_ctx.contacts, find_ctx.i, req_id);
-
+    const char              *value = self->storage ? kad_storage_lookup(self->storage, req->d.find_value.key) : NULL;
+    send_context->payload_str = create_find_value_response(value, find_ctx.contacts, find_ctx.i, req_id);
     send_request->data = (void *)(send_context);
 
     // Cleanup.

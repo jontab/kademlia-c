@@ -44,8 +44,8 @@ struct kad_valuecrawlerargs_s
 // Methods
 //
 
-void kad_valuecrawler_init(kad_valuecrawler_t *s, kad_valuecrawlerargs_t args);
+void kad_valuecrawler_init(kad_valuecrawler_t *s, const kad_valuecrawlerargs_t *args);
 void kad_valuecrawler_fini(kad_valuecrawler_t *s);
-void kad_valuecrawler_find(kad_valuecrawler_t *s, const char *key, kad_valuecrawlercb_t cb, void *user);
+void kad_valuecrawler_find(kad_valuecrawler_t *s, kad_valuecrawlercb_t cb, void *user);
 
 #endif // KADEMLIA_VALUECRAWLER_H

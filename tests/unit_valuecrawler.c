@@ -46,7 +46,7 @@ MunitResult unit_valuecrawler_find(const MunitParameter params[], void *data)
         kad_table_add_contact(&tables[i], &prev);
     }
 
-    kad_storage_put(&storages[0], "key", "value");
+    kad_storage_put(&storages[3], "key", "value");
 
     // Execute.
     kad_contact_t seed = {
@@ -75,6 +75,7 @@ MunitResult unit_valuecrawler_find(const MunitParameter params[], void *data)
     {
         kad_uv_protocol_free((kad_uv_protocol_t *)(protocols[i]));
         kad_table_fini(&tables[i]);
+        kad_storage_fini(&storages[i]);
     }
 
     return MUNIT_OK;
@@ -91,6 +92,7 @@ MunitTest unit_valuecrawler_tests[] = {
 
 void kad_valuecrawler_find_cb(const char *value, void *user)
 {
+    munit_assert_ptr_not_null(value);
     munit_assert_string_equal(value, "value");
     uv_stop(uv_default_loop());
 }

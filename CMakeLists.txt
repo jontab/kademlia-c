@@ -14,6 +14,7 @@ set(LIBKADEMLIA_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ordereddict.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/storage.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/table.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/uint256.c)
 
@@ -30,6 +31,7 @@ set(LIBKADEMLIA_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ordereddict.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/storage.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/table.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/uint256.h)
 
@@ -39,6 +41,8 @@ set(TESTS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_bucket.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_contactheap.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_contactset.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_nodecrawler.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_valuecrawler.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_ordereddict.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_protocol.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_rpc.c
@@ -71,5 +75,4 @@ target_link_libraries(kademlia-tests
 
 target_compile_options(kademlia-tests PUBLIC
     -O0
-    -g
-    -DKADEMLIA_NDEBUG)
+    -g)

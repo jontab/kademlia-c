@@ -153,7 +153,7 @@ void kad_valuecrawler_handle(kad_valuecrawler_t *s, n_findresults_t *results, ka
 void kad_valuecrawler_find_unmarked_cb(const kad_contact_t *unmarked, void *user)
 {
     n_findcontext_t *fc = (n_findcontext_t *)(user);
-    if (fc->i < fc->s->alpha)
+    if (fc->i < fc->ndispatched)
     {
         n_nodecontext_t *vc = kad_alloc(1, sizeof(n_nodecontext_t));
         *vc = (n_nodecontext_t){
@@ -189,8 +189,6 @@ void kad_valuecrawler_find_value_cb(bool ok, void *result, void *user)
 {
     n_nodecontext_t *c = (n_nodecontext_t *)(user);
 
-    kad_debug("find_value_cb: got incremental result\n");
-
     c->results->size++;
     c->results->ids = kad_realloc(c->results->ids, c->results->size * sizeof(kad_id_t));
     c->results->oks = kad_realloc(c->results->oks, c->results->size * sizeof(bool));
@@ -211,7 +209,6 @@ void kad_valuecrawler_find_value_cb(bool ok, void *result, void *user)
 
     if (c->results->size == c->ndispatched)
     {
-        kad_debug("find_value_cb: got all results\n");
         kad_valuecrawler_handle(c->s, c->results, c->gotvalue, c->gotvalueuser);
         free(c->results);
     }

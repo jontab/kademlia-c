@@ -192,16 +192,24 @@ MunitResult unit_protocol_send_find_value(const MunitParameter params[], void *d
     munit_assert_int(test_port1, !=, test_port2);
 
     // Setup.
+    kad_storage_t storage_1;
+    kad_storage_t storage_2;
+    kad_storage_init(&storage_1);
+    kad_storage_init(&storage_2);
+
     kad_table_t table_1;
     kad_table_t table_2;
     kad_table_init(&table_1, &(kad_id_t){{1, 2, 3, 4, 5, 6, 7, 8}}, 8);
     kad_table_init(&table_2, &(kad_id_t){{2, 3, 4, 5, 6, 7, 8, 9}}, 8);
-    kad_uv_protocol_t *protocol_1 = kad_uv_protocol_new(uv_default_loop(), &table_1, NULL);
-    kad_uv_protocol_t *protocol_2 = kad_uv_protocol_new(uv_default_loop(), &table_2, NULL);
+
+    kad_uv_protocol_t *protocol_1 = kad_uv_protocol_new(uv_default_loop(), &table_1, &storage_1);
+    kad_uv_protocol_t *protocol_2 = kad_uv_protocol_new(uv_default_loop(), &table_2, &storage_2);
     kad_uv_protocol_start(protocol_1, TEST_HOST1, test_port1);
     kad_uv_protocol_start(protocol_2, TEST_HOST2, test_port2);
 
     // Execute.
+    kad_storage_put(&storage_2, "key", "value");
+
     protocol_1->base.find_value(&(kad_find_value_args_t){
         .self = (kad_protocol_t *)(protocol_1),
         .id = &table_1.id,
@@ -219,8 +227,12 @@ MunitResult unit_protocol_send_find_value(const MunitParameter params[], void *d
     // Cleanup.
     kad_uv_protocol_free(protocol_1);
     kad_uv_protocol_free(protocol_2);
+
     kad_table_fini(&table_1);
     kad_table_fini(&table_2);
+
+    kad_storage_fini(&storage_1);
+    kad_storage_fini(&storage_2);
     return MUNIT_OK;
 }
 
@@ -291,7 +303,8 @@ void find_value_cb(bool ok, void *result_p, void *data)
     munit_assert_true(ok);
     kad_result_t *result = (kad_result_t *)(result_p);
     munit_assert_int(result->type, ==, KAD_FIND_VALUE);
-    munit_assert_string_equal(result->d.find_value.value, "dummyvalue");
+    munit_assert_ptr_not_null(result->d.find_value.value);
+    munit_assert_string_equal(result->d.find_value.value, "value");
     munit_assert_int(result->d.find_value.size, ==, 0);
     uv_stop(uv_default_loop());
 }

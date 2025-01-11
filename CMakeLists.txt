@@ -37,6 +37,7 @@ set(TESTS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/main.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/munit.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_bucket.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_contactheap.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_contactset.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_ordereddict.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_protocol.c

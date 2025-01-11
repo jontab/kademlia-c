@@ -116,7 +116,7 @@ void kad_nodecrawler_handle(kad_nodecrawler_t *s, n_findresults_t *results, kad_
 
     if (kad_contactheap_done(&s->nearest))
     {
-        cb(NULL, data);
+        kad_contactheap_iter(&s->nearest, cb, data);
         return;
     }
 

@@ -1,14 +1,18 @@
 #ifndef KADEMLIA_PROTOCOL_H
 #define KADEMLIA_PROTOCOL_H
 
-#include "list.h"
+#include "ds/list.h"
 #include "rpc.h"
+#include "storage.h"
 #include "table.h"
 #include "uint256.h"
-#include "storage.h"
 
 #include <stdbool.h>
 #include <uv.h>
+
+/******************************************************************************/
+/* Typedefs                                                                   */
+/******************************************************************************/
 
 typedef struct kad_promise_s         kad_promise_t;
 typedef struct kad_protocol_s        kad_protocol_t;
@@ -21,6 +25,10 @@ typedef struct kad_uv_protocol_s     kad_uv_protocol_t;
 typedef void (*kad_resolve_t)(bool ok, void *result, void *user);
 
 KAD_GENERATE_LIST_HEADER(kad_promise_list, struct kad_promise_s *)
+
+/******************************************************************************/
+/* Structs                                                                    */
+/******************************************************************************/
 
 struct kad_promise_s
 {
@@ -91,6 +99,10 @@ struct kad_uv_protocol_s
     kad_table_t       *table;
     kad_storage_t     *storage;
 };
+
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
 
 kad_uv_protocol_t *kad_uv_protocol_new(uv_loop_t *loop, kad_table_t *table, kad_storage_t *storage);
 void               kad_uv_protocol_free(kad_uv_protocol_t *self);

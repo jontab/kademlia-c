@@ -7,8 +7,16 @@
 #define ITER_CONT 0
 #define ITER_STOP 1
 
+/******************************************************************************/
+/* Typedefs                                                                   */
+/******************************************************************************/
+
 typedef struct kad_ordereddictnode_s kad_ordereddictnode_t;
 typedef struct kad_ordereddict_s     kad_ordereddict_t;
+
+/******************************************************************************/
+/* Structs                                                                    */
+/******************************************************************************/
 
 struct kad_ordereddictnode_s
 {
@@ -22,6 +30,10 @@ struct kad_ordereddict_s
     kad_ordereddictnode_t *head;
     int                    size;
 };
+
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
 
 void               kad_ordereddict_init(kad_ordereddict_t *s);
 void               kad_ordereddict_fini(kad_ordereddict_t *s);

@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
+
 int kad_uint256_cmp(const kad_uint256_t *a, const kad_uint256_t *b)
 {
     for (int i = 0; i < sizeof(a->d) / sizeof(a->d[0]); i++)

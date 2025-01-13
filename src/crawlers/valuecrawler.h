@@ -5,18 +5,18 @@
 #include "../uint256.h"
 #include "contactheap.h"
 
-//
-// Typedefs
-//
+/******************************************************************************/
+/* Typedefs                                                                   */
+/******************************************************************************/
 
 typedef struct kad_valuecrawler_s     kad_valuecrawler_t;
 typedef struct kad_valuecrawlerargs_s kad_valuecrawlerargs_t;
 
 typedef void (*kad_valuecrawlercb_t)(const char *value, void *user);
 
-//
-// Structs
-//
+/******************************************************************************/
+/* Structs                                                                    */
+/******************************************************************************/
 
 struct kad_valuecrawler_s
 {
@@ -40,9 +40,9 @@ struct kad_valuecrawlerargs_s
     kad_protocol_t      *proto;
 };
 
-//
-// Methods
-//
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
 
 void kad_valuecrawler_init(kad_valuecrawler_t *s, const kad_valuecrawlerargs_t *args);
 void kad_valuecrawler_fini(kad_valuecrawler_t *s);

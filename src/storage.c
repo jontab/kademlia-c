@@ -7,9 +7,9 @@
 static kad_storagenode_t *kad_storagenode_new(const char *key, const char *value);
 static void               kad_storagenode_free(kad_storagenode_t *self);
 
-//
-// Public
-//
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
 
 void kad_storage_init(kad_storage_t *self)
 {
@@ -67,9 +67,9 @@ void kad_storage_erase(kad_storage_t *self, const char *key)
 {
 }
 
-//
-// Statics
-//
+/******************************************************************************/
+/* Statics                                                                    */
+/******************************************************************************/
 
 kad_storagenode_t *kad_storagenode_new(const char *key, const char *value)
 {

@@ -2,11 +2,12 @@
 #define KADEMLIA_TABLE_H
 
 #include "bucket.h"
+#include "ds/contactlist.h"
 #include "uint256.h"
 
-//
-// Typedefs
-//
+/******************************************************************************/
+/* Typedefs                                                                   */
+/******************************************************************************/
 
 typedef struct kad_table_s kad_table_t;
 
@@ -23,9 +24,9 @@ struct kad_table_s
     struct kad_protocol_s *protocol;
 };
 
-//
-// Methods
-//
+/******************************************************************************/
+/* Methods                                                                    */
+/******************************************************************************/
 
 void kad_table_init(kad_table_t *s, const kad_id_t *id, int capacity);
 void kad_table_fini(kad_table_t *s);
@@ -39,7 +40,6 @@ bool kad_table_can_split_bucket(const kad_table_t *s, const kad_bucket_t *b);
 void kad_table_remove_contact(const kad_table_t *s, const kad_id_t *id);
 int  kad_table_traverse_buckets(const kad_table_t *s, int bix, int (*cb)(const kad_contact_t *c, void *data),
                                 void *data);
-void kad_table_find_closest(const kad_table_t *s, const kad_id_t *id, const kad_id_t *exclude,
-                            kad_contact_t **contacts, int *contacts_size);
+void kad_table_find_closest(const kad_table_t *s, const kad_id_t *id, const kad_id_t *exclude, kad_contactlist_t *list);
 
 #endif // KADEMLIA_TABLE_H

@@ -3,16 +3,17 @@ project(kademlia)
 
 set(LIBKADEMLIA_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/crawlers/contactheap.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/crawlers/contactset.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/crawlers/nodecrawler.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/crawlers/valuecrawler.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ds/contactlist.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ds/contactset.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ds/ordereddict.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/alloc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bucket.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cJSON.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/client.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/contact.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/log.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ordereddict.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/storage.c
@@ -21,16 +22,18 @@ set(LIBKADEMLIA_SOURCES
 
 set(LIBKADEMLIA_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/crawlers/contactheap.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/crawlers/contactset.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/crawlers/nodecrawler.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/crawlers/valuecrawler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ds/contactlist.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ds/contactset.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ds/list.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ds/ordereddict.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/alloc.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bucket.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cJSON.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/client.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/contact.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/log.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ordereddict.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/storage.h
@@ -78,4 +81,5 @@ target_link_libraries(kademlia-tests
 
 target_compile_options(kademlia-tests PUBLIC
     -O0
-    -g)
+    -g
+    -DKADEMLIA_NDEBUG)

@@ -3,20 +3,21 @@
 
 #include "../contact.h"
 #include "../uint256.h"
-#include "contactset.h"
+#include "../ds/contactset.h"
+#include "../ds/contactlist.h"
 
-//
-// Typedefs
-//
+/******************************************************************************/
+/* Typedefs                                                                   */
+/******************************************************************************/
 
 typedef struct kad_contactheap_s kad_contactheap_t;
 
 typedef void (*kad_contactheapiter_t)(const kad_contact_t *c, void *user);
 typedef void (*kad_contactheapunmarkediter_t)(const kad_contact_t *c, void *user);
 
-//
-// Structs
-//
+/******************************************************************************/
+/* Structs                                                                    */
+/******************************************************************************/
 
 struct kad_contactheap_s
 {
@@ -28,9 +29,9 @@ struct kad_contactheap_s
     int              heap_size;
 };
 
-//
-// Methods
-//
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
 
 void kad_contactheap_init(kad_contactheap_t *s, const kad_id_t *target, int capacity);
 void kad_contactheap_fini(kad_contactheap_t *s);

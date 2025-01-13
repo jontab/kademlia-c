@@ -5,9 +5,9 @@
 #include "storage.h"
 #include "table.h"
 
-//
-// Typedefs
-//
+/******************************************************************************/
+/* Typedefs                                                                   */
+/******************************************************************************/
 
 typedef struct kad_client_s kad_client_t;
 
@@ -15,9 +15,9 @@ typedef void (*bootstrap_then_t)(void *user);
 typedef void (*lookup_then_t)(const char *value, void *user);
 typedef void (*insert_then_t)(void *user);
 
-//
-// Structs
-//
+/******************************************************************************/
+/* Structs                                                                    */
+/******************************************************************************/
 
 struct kad_client_s
 {
@@ -31,9 +31,9 @@ struct kad_client_s
     kad_uv_protocol_t *protocol;
 };
 
-//
-// Methods
-//
+/******************************************************************************/
+/* Methods                                                                    */
+/******************************************************************************/
 
 void kad_client_init(kad_client_t *self, uv_loop_t *loop, const char *host, int port);
 void kad_client_fini(kad_client_t *self);

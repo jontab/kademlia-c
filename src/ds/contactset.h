@@ -4,9 +4,9 @@
 #include "../contact.h"
 #include <stdbool.h>
 
-//
-// Enums
-//
+/******************************************************************************/
+/* Enums                                                                      */
+/******************************************************************************/
 
 enum kad_contactsetcellstate_e
 {
@@ -15,9 +15,9 @@ enum kad_contactsetcellstate_e
     KAD_CONTACTSETCELLSTATE_DELETED,
 };
 
-//
-// Typedefs
-//
+/******************************************************************************/
+/* Typedefs                                                                   */
+/******************************************************************************/
 
 typedef struct kad_contactsetcell_s    kad_contactsetcell_t;
 typedef struct kad_contactset_s        kad_contactset_t;
@@ -25,9 +25,9 @@ typedef enum kad_contactsetcellstate_e kad_contactsetcellstate_t;
 
 typedef bool (*kad_contactsetiter_t)(const kad_contact_t *c, void *user);
 
-//
-// Structs
-//
+/******************************************************************************/
+/* Structs                                                                    */
+/******************************************************************************/
 
 struct kad_contactsetcell_s
 {
@@ -42,9 +42,9 @@ struct kad_contactset_s
     int                   size;
 };
 
-//
-// Methods
-//
+/******************************************************************************/
+/* Methods                                                                    */
+/******************************************************************************/
 
 void kad_contactset_init(kad_contactset_t *s);
 void kad_contactset_fini(kad_contactset_t *s);

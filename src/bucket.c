@@ -4,6 +4,10 @@
 #include <assert.h>
 #include <stdlib.h>
 
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
+
 void kad_bucket_init(kad_bucket_t *s, const kad_id_t *range_lower, const kad_id_t *range_upper, int capacity)
 {
     s->range_lower = range_lower ? *range_lower : (kad_uint256_t){0}; // Inclusive.

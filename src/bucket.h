@@ -1,12 +1,20 @@
 #ifndef KADEMLIA_BUCKET_H
 #define KADEMLIA_BUCKET_H
 
-#include "ordereddict.h"
+#include "ds/ordereddict.h"
 #include "uint256.h"
 #include <stdbool.h>
 #include <time.h>
 
+/******************************************************************************/
+/* Typedefs                                                                   */
+/******************************************************************************/
+
 typedef struct kad_bucket_s kad_bucket_t;
+
+/******************************************************************************/
+/* Structs                                                                    */
+/******************************************************************************/
 
 struct kad_bucket_s
 {
@@ -17,6 +25,10 @@ struct kad_bucket_s
     kad_ordereddict_t replacements;
     struct timespec   last_touched_at;
 };
+
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
 
 void          kad_bucket_init(kad_bucket_t *s, const kad_id_t *range_lower, const kad_id_t *range_upper, int capacity);
 void          kad_bucket_fini(kad_bucket_t *s);

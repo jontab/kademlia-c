@@ -2,18 +2,18 @@
 #include "../alloc.h"
 #include "log.h"
 
-//
-// Typedefs
-//
+/******************************************************************************/
+/* Typedefs                                                                   */
+/******************************************************************************/
 
 typedef struct n_findresults_s   n_findresults_t;
 typedef struct n_findcontext_s   n_findcontext_t;
 typedef struct n_nodecontext_s   n_nodecontext_t;
 typedef struct n_resultcontext_s n_resultcontext_t;
 
-//
-// Structs
-//
+/******************************************************************************/
+/* Structs                                                                    */
+/******************************************************************************/
 
 struct n_findresults_s
 {
@@ -53,18 +53,19 @@ struct n_resultcontext_s
     int            contacts_size;
 };
 
-//
-// Decls
-//
+/******************************************************************************/
+/* Decls                                                                      */
+/******************************************************************************/
 
 static void kad_nodecrawler_handle(kad_nodecrawler_t *s, n_findresults_t *results, kad_nodecrawlercb_t cb, void *user);
 static void kad_nodecrawler_find_unmarked_cb(const kad_contact_t *unmarked, void *user);
 static void kad_nodecrawler_find_unmarked_length(const kad_contact_t *unmarked, void *user);
 static void kad_nodecrawler_find_node_cb(bool ok, void *result, void *user);
 static void kad_nodecrawler_find_transfer_results(const kad_contact_t *contact, void *user);
-//
-// Public
-//
+
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
 
 void kad_nodecrawler_init(kad_nodecrawler_t *s, const kad_nodecrawlerargs_t *args)
 {
@@ -109,9 +110,9 @@ void kad_nodecrawler_find(kad_nodecrawler_t *s, kad_nodecrawlercb_t cb, void *us
     kad_contactheap_unmarked(&s->nearest, kad_nodecrawler_find_unmarked_cb, &findcontext);
 }
 
-//
-// Statics
-//
+/******************************************************************************/
+/* Statics                                                                    */
+/******************************************************************************/
 
 void kad_nodecrawler_handle(kad_nodecrawler_t *s, n_findresults_t *results, kad_nodecrawlercb_t cb, void *data)
 {

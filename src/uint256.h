@@ -4,16 +4,26 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/******************************************************************************/
+/* Typedefs                                                                   */
+/******************************************************************************/
+
 typedef struct kad_uint256_s kad_uint256_t;
+typedef kad_uint256_t        kad_id_t;
+
+/******************************************************************************/
+/* Structs                                                                    */
+/******************************************************************************/
 
 struct kad_uint256_s
 {
     uint32_t d[256 / 32];
 };
 
-typedef kad_uint256_t kad_id_t;
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
 
-// TODO: Consider using a library for this.
 int  kad_uint256_cmp(const kad_uint256_t *a, const kad_uint256_t *b);
 void kad_uint256_and(const kad_uint256_t *a, const kad_uint256_t *b, kad_uint256_t *res);
 void kad_uint256_xor(const kad_uint256_t *a, const kad_uint256_t *b, kad_uint256_t *res);

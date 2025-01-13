@@ -6,44 +6,54 @@
 
 #define DEFAULT_ALPHA 8
 
-//
-// Typedefs
-//
+/******************************************************************************/
+/* Typedefs                                                                   */
+/******************************************************************************/
 
 typedef struct bootstrap_context_s bootstrap_context_t;
 typedef struct insert_context_s    insert_context_t;
+typedef struct lookup_context_s    lookup_context_t;
 
-//
-// Structs
-//
+/******************************************************************************/
+/* Structs                                                                    */
+/******************************************************************************/
 
 struct bootstrap_context_s
 {
-    kad_client_t    *self;
-    kad_contact_t   *contacts;      // Grows.
-    int             *contacts_size; // Grows.
-    int             *bootstrap_result_count;
-    int              bootstrap_size;
-    bootstrap_then_t then;
-    void            *then_data;
-    char             contact_host[BUFSIZ];
-    int              contact_port;
+    kad_client_t      *self;
+    kad_contact_t     *contacts;      // Grows.
+    int               *contacts_size; // Grows.
+    int               *bootstrap_result_count;
+    int                bootstrap_size;
+    bootstrap_then_t   then;
+    void              *then_data;
+    char               contact_host[BUFSIZ];
+    int                contact_port;
+    kad_nodecrawler_t *crawler;
 };
 
 struct insert_context_s
 {
-    char          key[BUFSIZ];
-    char          value[BUFSIZ];
-    kad_client_t *self;
-    insert_then_t then;
-    void         *then_data;
-    int           total_store_count;
-    int           store_count;
+    char               key[BUFSIZ];
+    char               value[BUFSIZ];
+    kad_client_t      *self;
+    insert_then_t      then;
+    void              *then_data;
+    int                total_store_count;
+    int                store_count;
+    kad_nodecrawler_t *crawler;
 };
 
-//
-// Decls
-//
+struct lookup_context_s
+{
+    kad_valuecrawler_t *crawler;
+    lookup_then_t       then;
+    void               *then_data;
+};
+
+/******************************************************************************/
+/* Decls                                                                      */
+/******************************************************************************/
 
 static void kad_client_schedule_refresh(kad_client_t *self);
 static void kad_client_bootstrap_ping_callback(bool ok, void *result, void *user);
@@ -51,10 +61,11 @@ static void kad_client_bootstrap_process_results(bootstrap_context_t *context);
 static void kad_client_bootstrap_crawler_callback(const kad_contact_t *contacts, int contacts_size, void *user);
 static void kad_client_insert_callback(const kad_contact_t *contacts, int contacts_size, void *user);
 static void kad_client_insert_callback_store(bool ok, void *result, void *user);
+static void kad_client_lookup_callback(const char *value, void *user);
 
-//
-// Public
-//
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
 
 void kad_client_init(kad_client_t *self, uv_loop_t *loop, const char *host, int port)
 {
@@ -87,7 +98,7 @@ void kad_client_start(kad_client_t *self)
     kad_info("listening on %s:%d\n", self->host, self->port);
 }
 
-void kad_client_bootstrap(kad_client_t *self, const char **hosts, int *ports, int size, void (*then)(void *user),
+void kad_client_bootstrap(kad_client_t *self, const char **hosts, int *ports, int size, bootstrap_then_t then,
                           void *user)
 {
     kad_info("bootstrapping with %d address\n", size);
@@ -100,7 +111,6 @@ void kad_client_bootstrap(kad_client_t *self, const char **hosts, int *ports, in
     kad_contact_t *contacts = NULL;
     int           *contacts_size = kad_alloc(1, sizeof(int));
     int           *bootstrap_result_count = kad_alloc(1, sizeof(int));
-
     for (int contact_i = 0; contact_i < size; contact_i++)
     {
         const char *contact_host = hosts[contact_i];
@@ -119,7 +129,6 @@ void kad_client_bootstrap(kad_client_t *self, const char **hosts, int *ports, in
             .contact_host = {0},
             .contact_port = contact_port,
         };
-
         strncpy(context->contact_host, contact_host, sizeof(context->contact_host) - 1);
 
         self->protocol->base.ping(&(kad_ping_args_t){
@@ -133,9 +142,9 @@ void kad_client_bootstrap(kad_client_t *self, const char **hosts, int *ports, in
     }
 }
 
-//
-// Statics
-//
+/******************************************************************************/
+/* Statics                                                                    */
+/******************************************************************************/
 
 void kad_client_schedule_refresh(kad_client_t *self)
 {
@@ -147,7 +156,6 @@ void kad_client_bootstrap_ping_callback(bool ok, void *result, void *user)
     bootstrap_context_t *context = (bootstrap_context_t *)(user);
     kad_result_t        *result_obj = (kad_result_t *)(result_obj);
     kad_info("got ping result from %s:%d - ok: %d\n", context->contact_host, context->contact_port, ok);
-
     if (ok)
     {
         (*context->contacts_size)++;
@@ -163,11 +171,9 @@ void kad_client_bootstrap_ping_callback(bool ok, void *result, void *user)
     (*context->bootstrap_result_count)++;
     if (*context->bootstrap_result_count == context->bootstrap_size)
     {
-        kad_info("finished pinging bootstrap nodes\n");
-
         // We've received results from all of the nodes.
+        kad_info("finished pinging bootstrap nodes\n");
         kad_client_bootstrap_process_results(context);
-
         if (context->contacts)
         {
             free(context->contacts);
@@ -185,8 +191,6 @@ void kad_client_bootstrap_ping_callback(bool ok, void *result, void *user)
 void kad_client_bootstrap_process_results(bootstrap_context_t *context)
 {
     kad_table_t *table = &context->self->table;
-
-    // Add bootstraps to table.
     for (int i = 0; i < *context->contacts_size; i++)
     {
         kad_contact_t *contact = &context->contacts[i];
@@ -195,7 +199,6 @@ void kad_client_bootstrap_process_results(bootstrap_context_t *context)
 
     // Add neighbors to table.
     kad_info("issuing search for neighbor nodes\n");
-
     kad_nodecrawlerargs_t args = {
         .id = table->id,
         .proto = (kad_protocol_t *)(context->self->protocol),
@@ -205,9 +208,9 @@ void kad_client_bootstrap_process_results(bootstrap_context_t *context)
         .contacts = context->contacts,
         .contacts_size = *context->contacts_size,
     };
-    kad_nodecrawler_t *crawler = kad_alloc(1, sizeof(kad_nodecrawler_t));
-    kad_nodecrawler_init(crawler, &args);
-    kad_nodecrawler_find(crawler, kad_client_bootstrap_crawler_callback, context);
+    context->crawler = kad_alloc(1, sizeof(kad_nodecrawler_t));
+    kad_nodecrawler_init(context->crawler, &args);
+    kad_nodecrawler_find(context->crawler, kad_client_bootstrap_crawler_callback, context);
 }
 
 void kad_client_bootstrap_crawler_callback(const kad_contact_t *contacts, int contacts_size, void *user)
@@ -223,52 +226,50 @@ void kad_client_bootstrap_crawler_callback(const kad_contact_t *contacts, int co
         kad_table_add_contact(table, contact);
     }
 
+    kad_nodecrawler_fini(context->crawler);
+
     // Bootstrapping is done!
     context->then(context->then_data);
-    // TODO: Delete crawler.
 }
 
 void kad_client_lookup(kad_client_t *self, const char *key, lookup_then_t then, void *user)
 {
-    kad_contact_t *contacts = NULL;
-    int            contacts_size = 0;
-    kad_table_find_closest(&self->table, &self->id, &self->id, &contacts, &contacts_size);
-
+    kad_contactlist_t contacts = {0};
+    kad_table_find_closest(&self->table, &self->id, &self->id, &contacts);
     kad_valuecrawlerargs_t args = {
         .id = self->id,
         .key = key,
         .capacity = self->capacity,
         .alpha = DEFAULT_ALPHA,
-        .contacts = contacts,
-        .contacts_size = contacts_size,
+        .contacts = contacts.data,
+        .contacts_size = contacts.size,
         .proto = (kad_protocol_t *)(self->protocol),
     };
-    kad_valuecrawler_t *crawler = kad_alloc(1, sizeof(kad_valuecrawler_t));
-    kad_valuecrawler_init(crawler, &args);
-
-    free(contacts);
-
-    kad_valuecrawler_find(crawler, then, user);
-    // TODO: Delete crawler.
+    lookup_context_t *context = kad_alloc(1, sizeof(lookup_context_t));
+    *context = (lookup_context_t){
+        .then = then,
+        .then_data = user,
+        .crawler = kad_alloc(1, sizeof(kad_valuecrawler_t)),
+    };
+    kad_valuecrawler_init(context->crawler, &args);
+    kad_valuecrawler_find(context->crawler, kad_client_lookup_callback, context);
+    kad_contactlist_fini(&contacts);
 }
 
 void kad_client_insert(kad_client_t *self, const char *key, const char *value, insert_then_t then, void *user)
 {
-    kad_contact_t *contacts = NULL;
-    int            contacts_size = 0;
-    kad_table_find_closest(&self->table, &self->id, &self->id, &contacts, &contacts_size);
-
+    kad_contactlist_t contacts = {0};
+    kad_table_find_closest(&self->table, &self->id, &self->id, &contacts);
     kad_nodecrawlerargs_t args = {
         .id = self->id,
         .target = {0},
         .capacity = self->capacity,
         .alpha = DEFAULT_ALPHA,
-        .contacts = contacts,
-        .contacts_size = contacts_size,
+        .contacts = contacts.data,
+        .contacts_size = contacts.size,
         .proto = (kad_protocol_t *)(self->protocol),
     };
     kad_uint256_from_key(key, &args.target);
-
     insert_context_t *context = kad_alloc(1, sizeof(insert_context_t));
     *context = (insert_context_t){
         .key = {0},
@@ -276,18 +277,13 @@ void kad_client_insert(kad_client_t *self, const char *key, const char *value, i
         .self = self,
         .then = then,
         .then_data = user,
+        .crawler = kad_alloc(1, sizeof(kad_nodecrawler_t)),
     };
     strncpy(context->key, key, sizeof(context->key) - 1);
     strncpy(context->value, value, sizeof(context->value) - 1);
-
-    kad_nodecrawler_t *crawler = kad_alloc(1, sizeof(kad_nodecrawler_t));
-    kad_nodecrawler_init(crawler, &args);
-
-    free(contacts);
-
-    kad_nodecrawler_find(crawler, kad_client_insert_callback, context);
-
-    // TODO: Clean crawler.
+    kad_nodecrawler_init(context->crawler, &args);
+    kad_nodecrawler_find(context->crawler, kad_client_insert_callback, context);
+    kad_contactlist_fini(&contacts);
 }
 
 //
@@ -324,17 +320,22 @@ void kad_client_insert_callback(const kad_contact_t *contacts, int contacts_size
 void kad_client_insert_callback_store(bool ok, void *result, void *user)
 {
     insert_context_t *context = (insert_context_t *)(user);
-    context->store_count++;
-
-    // TODO: Should check `ok`?
-
-    if (context->store_count == context->total_store_count)
+    if ((++context->store_count) == context->total_store_count)
     {
         insert_then_t then = context->then;
         void         *then_data = context->then_data;
 
+        kad_nodecrawler_fini(context->crawler);
         free(context);
 
         then(then_data);
     }
+}
+
+void kad_client_lookup_callback(const char *value, void *user)
+{
+    lookup_context_t *context = (lookup_context_t *)(user);
+    kad_valuecrawler_fini(context->crawler);
+    context->then(value, context->then_data);
+    free(context);
 }

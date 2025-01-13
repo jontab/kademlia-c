@@ -87,8 +87,11 @@ MunitResult unit_table_remove_contact(const MunitParameter params[], void *data)
     return MUNIT_OK;
 }
 
-void unit_table_find_closest_check(const kad_contact_t *contacts, int contacts_size)
+void unit_table_find_closest_check(kad_contactlist_t *list)
 {
+    kad_contact_t *contacts = list->data;
+    int            contacts_size = list->size;
+
     munit_assert_int(contacts_size, ==, 4);
     kad_id_t id_0 = contacts[0].id;
     kad_id_t id_1 = contacts[1].id;
@@ -136,16 +139,14 @@ MunitResult unit_table_find_closest(const MunitParameter params[], void *data)
     }
 
     // Execute.
-    kad_id_t      *id = &conts[4].id;
-    kad_id_t      *ex = id;
-    kad_contact_t *contacts = NULL;
-    int            contacts_size = 0;
-    kad_table_find_closest(&t, id, ex, &contacts, &contacts_size);
-    unit_table_find_closest_check(contacts, contacts_size);
-
-    free(contacts);
+    kad_id_t         *id = &conts[4].id;
+    kad_id_t         *ex = id;
+    kad_contactlist_t contacts = {0};
+    kad_table_find_closest(&t, id, ex, &contacts);
+    unit_table_find_closest_check(&contacts);
 
     // Cleanup.
+    kad_contactlist_fini(&contacts);
     kad_table_fini(&t);
     return MUNIT_OK;
 }

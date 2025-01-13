@@ -8,9 +8,9 @@ static void         kad_contactset_reserve(kad_contactset_t *s, int size);
 static unsigned int kad_contactset_hash(const kad_id_t *id);
 static bool         kad_contactset_reserve_cb(const kad_contact_t *c, void *user);
 
-//
-// Public
-//
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
 
 void kad_contactset_init(kad_contactset_t *s)
 {
@@ -109,9 +109,9 @@ bool kad_contactset_pop(kad_contactset_t *s, const kad_id_t *id, kad_contact_t *
     return false;
 }
 
-//
-// Static
-//
+/******************************************************************************/
+/* Statics                                                                    */
+/******************************************************************************/
 
 void kad_contactset_reserve(kad_contactset_t *s, int size)
 {

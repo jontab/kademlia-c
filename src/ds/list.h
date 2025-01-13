@@ -5,8 +5,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define LIST_DEFAULT_FREE(X)                                                                                           \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        (void)(X);                                                                                                     \
+    } while (0)
+
 #define KAD_GENERATE_LIST_HEADER(NAME, TYPE)                                                                           \
     typedef struct NAME##_s NAME##_t;                                                                                  \
+                                                                                                                       \
     struct NAME##_s                                                                                                    \
     {                                                                                                                  \
         TYPE *data;                                                                                                    \

@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
+
 void *kad_alloc(size_t count, size_t size)
 {
     void *data = calloc(count, size);

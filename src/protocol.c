@@ -8,10 +8,18 @@
 
 KAD_GENERATE_LIST_SOURCE(kad_promise_list, kad_promise_t *, free)
 
+/******************************************************************************/
+/* Typedefs                                                                   */
+/******************************************************************************/
+
 typedef struct send_context_s            send_context_t;
 typedef struct send_response_context_s   send_response_context_t;
 typedef struct request_timeout_context_s request_timeout_context_t;
 typedef struct find_node_context_s       find_node_context_t;
+
+/******************************************************************************/
+/* Structs                                                                    */
+/******************************************************************************/
 
 struct send_context_s
 {
@@ -40,6 +48,10 @@ struct find_node_context_s
     int            i;
 };
 
+/******************************************************************************/
+/* Decls                                                                      */
+/******************************************************************************/
+
 static void kad_uv_protocol_ping(const kad_ping_args_t *args);
 static void kad_uv_protocol_store(const kad_store_args_t *args);
 static void kad_uv_protocol_find_node(const kad_find_node_args_t *args);
@@ -62,9 +74,9 @@ static void request_timeout_cb(uv_timer_t *handle);
 static void request_timeout_start(send_context_t *context);
 static void uv_buf_alloc(uv_handle_t *handle, size_t suggested_size, uv_buf_t *buf);
 
-//
-// Public
-//
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
 
 kad_uv_protocol_t *kad_uv_protocol_new(uv_loop_t *loop, kad_table_t *table, kad_storage_t *storage)
 {
@@ -96,9 +108,9 @@ void kad_uv_protocol_start(kad_uv_protocol_t *self, const char *host, int port)
     kad_uv_protocol_start_recv(self, host, port);
 }
 
-//
-// Static
-//
+/******************************************************************************/
+/* Statics                                                                    */
+/******************************************************************************/
 
 void kad_uv_protocol_ping(const kad_ping_args_t *args)
 {
@@ -486,21 +498,15 @@ void recv_cb_request_find_node(uv_udp_t *handle, kad_request_t *req, const struc
 
     // Execute.
     recv_cb_request_add_contact(self, &req->d.find_node.id, addr);
-
-    kad_contact_t *contacts = NULL;
-    int            contacts_size = 0;
-    kad_table_find_closest(self->table, &req->d.find_node.target_id, &req->d.find_node.id, &contacts, &contacts_size);
+    kad_contactlist_t contacts = {0};
+    kad_table_find_closest(self->table, &req->d.find_node.target_id, &req->d.find_node.id, &contacts);
 
     // Setup.
     uv_udp_send_t           *send_request = kad_alloc(1, sizeof(uv_udp_send_t));
     send_response_context_t *send_context = kad_alloc(1, sizeof(send_response_context_t));
-
-    send_context->payload_str = create_find_node_response(contacts, contacts_size, req_id);
-
+    send_context->payload_str = create_find_node_response(contacts.data, contacts.size, req_id);
     send_request->data = (void *)(send_context);
-
-    // Cleanup.
-    free(contacts);
+    kad_contactlist_fini(&contacts);
 
     // Send.
     uv_buf_t response_buf = uv_buf_init(send_context->payload_str, strlen(send_context->payload_str) + 1);
@@ -517,23 +523,18 @@ void recv_cb_request_find_value(uv_udp_t *handle, kad_request_t *req, const stru
 
     // Execute.
     recv_cb_request_add_contact(self, &req->d.find_value.id, addr);
-
-    kad_id_t target_id;
+    kad_contactlist_t contacts = {0};
+    kad_id_t          target_id;
     kad_uint256_from_key(req->d.find_value.key, &target_id);
-
-    kad_contact_t *contacts = NULL;
-    int            contacts_size = 0;
-    kad_table_find_closest(self->table, &target_id, &req->d.find_value.id, &contacts, &contacts_size);
+    kad_table_find_closest(self->table, &target_id, &req->d.find_value.id, &contacts);
 
     // Setup.
     uv_udp_send_t           *send_request = kad_alloc(1, sizeof(uv_udp_send_t));
     send_response_context_t *send_context = kad_alloc(1, sizeof(send_response_context_t));
     const char              *value = self->storage ? kad_storage_lookup(self->storage, req->d.find_value.key) : NULL;
-    send_context->payload_str = create_find_value_response(value, contacts, contacts_size, req_id);
+    send_context->payload_str = create_find_value_response(value, contacts.data, contacts.size, req_id);
     send_request->data = (void *)(send_context);
-
-    // Cleanup.
-    free(contacts);
+    kad_contactlist_fini(&contacts);
 
     // Send.
     uv_buf_t response_buf = uv_buf_init(send_context->payload_str, strlen(send_context->payload_str) + 1);
@@ -599,11 +600,9 @@ void request_timeout_resolve_promise(kad_promise_list_t *promises, int request_i
 void request_timeout_cb(uv_timer_t *handle)
 {
     request_timeout_context_t *timeout_context = (request_timeout_context_t *)(handle->data);
-
-    int                 request_id = timeout_context->request_id;
-    kad_promise_list_t *promises = timeout_context->promises;
-
-    int promise_idx = find_promise_index(promises, request_id);
+    int                        request_id = timeout_context->request_id;
+    kad_promise_list_t        *promises = timeout_context->promises;
+    int                        promise_idx = find_promise_index(promises, request_id);
     if (promise_idx >= 0)
     {
         kad_promise_t *promise = promises->data[promise_idx];
@@ -618,10 +617,8 @@ void request_timeout_start(send_context_t *context)
 {
     uv_timer_t                *timeout = kad_alloc(1, sizeof(uv_timer_t));
     request_timeout_context_t *timeout_context = kad_alloc(1, sizeof(request_timeout_context_t));
-
     timeout_context->request_id = context->request_id;
     timeout_context->promises = &context->self->promises;
-
     timeout->data = (void *)(timeout_context);
 
     int ret;

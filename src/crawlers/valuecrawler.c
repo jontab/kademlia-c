@@ -2,17 +2,18 @@
 #include "../alloc.h"
 #include "log.h"
 
-//
-// Typedefs
-//
+/******************************************************************************/
+/* Typedefs                                                                   */
+/******************************************************************************/
+
 
 typedef struct n_findresults_s n_findresults_t;
 typedef struct n_findcontext_s n_findcontext_t;
 typedef struct n_nodecontext_s n_nodecontext_t;
 
-//
-// Structs
-//
+/******************************************************************************/
+/* Structs                                                                    */
+/******************************************************************************/
 
 struct n_findresults_s
 {
@@ -46,9 +47,9 @@ struct n_nodecontext_s
     void                *gotvalueuser;
 };
 
-//
-// Decls
-//
+/******************************************************************************/
+/* Decls                                                                      */
+/******************************************************************************/
 
 static void kad_valuecrawler_handle(kad_valuecrawler_t *s, n_findresults_t *results, kad_valuecrawlercb_t cb,
                                     void *user);
@@ -56,9 +57,9 @@ static void kad_valuecrawler_find_unmarked_cb(const kad_contact_t *unmarked, voi
 static void kad_valuecrawler_find_unmarked_length(const kad_contact_t *unmarked, void *user);
 static void kad_valuecrawler_find_value_cb(bool ok, void *result, void *user);
 
-//
-// Public
-//
+/******************************************************************************/
+/* Public                                                                     */
+/******************************************************************************/
 
 void kad_valuecrawler_init(kad_valuecrawler_t *s, const kad_valuecrawlerargs_t *args)
 {
@@ -107,9 +108,9 @@ void kad_valuecrawler_find(kad_valuecrawler_t *s, kad_valuecrawlercb_t cb, void 
     kad_contactheap_unmarked(&s->nearest, kad_valuecrawler_find_unmarked_cb, &findcontext);
 }
 
-//
-// Statics
-//
+/******************************************************************************/
+/* Statics                                                                    */
+/******************************************************************************/
 
 void kad_valuecrawler_handle(kad_valuecrawler_t *s, n_findresults_t *results, kad_valuecrawlercb_t cb, void *data)
 {

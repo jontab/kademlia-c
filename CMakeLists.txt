@@ -9,6 +9,7 @@ set(LIBKADEMLIA_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/alloc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bucket.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cJSON.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/client.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/contact.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/log.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ordereddict.c
@@ -26,6 +27,7 @@ set(LIBKADEMLIA_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/alloc.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/bucket.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cJSON.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/client.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/contact.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/log.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ordereddict.h
@@ -39,6 +41,7 @@ set(TESTS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/main.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/munit.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_bucket.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_client.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_contactheap.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_contactset.c
     ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit_nodecrawler.c

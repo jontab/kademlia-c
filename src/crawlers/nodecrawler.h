@@ -12,7 +12,7 @@
 typedef struct kad_nodecrawler_s     kad_nodecrawler_t;
 typedef struct kad_nodecrawlerargs_s kad_nodecrawlerargs_t;
 
-typedef void (*kad_nodecrawlercb_t)(const kad_contact_t *c, void *user);
+typedef void (*kad_nodecrawlercb_t)(const kad_contact_t *array, int size, void *user);
 
 //
 // Structs

@@ -7,7 +7,7 @@
 #define NCLIENTS   8
 #define CRAWLERCAP 4
 
-static void kad_nodecrawler_find_cb(const kad_contact_t *c, void *user);
+static void kad_nodecrawler_find_cb(const kad_contact_t *contacts, int contacts_size, void *user);
 
 MunitResult unit_nodecrawler_find(const MunitParameter params[], void *data)
 {
@@ -85,21 +85,13 @@ MunitTest unit_nodecrawler_tests[] = {
 // Statics
 //
 
-void kad_nodecrawler_find_cb(const kad_contact_t *c, void *user)
+void kad_nodecrawler_find_cb(const kad_contact_t *contacts, int contacts_size, void *user)
 {
-    int *i = (int *)(user);
+    munit_assert_int(contacts_size, >, 0);
 
-    kad_debug("find_cb: i = %d\n", *i);
+    kad_id_t want = {0};
+    kad_id_t got = contacts[0].id;
+    munit_assert_int(kad_uint256_cmp(&want, &got), ==, 0);
 
-    if (*i == 0)
-    {
-        kad_id_t want = {0};
-        munit_assert_int(kad_uint256_cmp(&c->id, &want), ==, 0);
-    }
-    else if (*i == CRAWLERCAP - 1)
-    {
-        uv_stop(uv_default_loop());
-    }
-
-    (*i)++;
+    uv_stop(uv_default_loop());
 }

@@ -113,6 +113,8 @@ void kad_uv_protocol_ping(const kad_ping_args_t *args)
         return;
     }
 
+    kad_info("pinging %s:%d\n", args->host, args->port);
+
     uv_udp_send_t  *send_req = kad_alloc(1, sizeof(uv_udp_send_t));
     send_context_t *send_ctx = kad_alloc(1, sizeof(send_context_t));
 
@@ -144,6 +146,8 @@ void kad_uv_protocol_store(const kad_store_args_t *args)
         args->callback(false, NULL, args->user);
         return;
     }
+
+    kad_info("storing at %s:%d\n", args->host, args->port);
 
     uv_udp_send_t  *send_req = kad_alloc(1, sizeof(uv_udp_send_t));
     send_context_t *send_ctx = kad_alloc(1, sizeof(send_context_t));
@@ -177,6 +181,8 @@ void kad_uv_protocol_find_node(const kad_find_node_args_t *args)
         return;
     }
 
+    kad_info("finding nodes at %s:%d\n", args->host, args->port);
+
     uv_udp_send_t  *send_req = kad_alloc(1, sizeof(uv_udp_send_t));
     send_context_t *send_ctx = kad_alloc(1, sizeof(send_context_t));
 
@@ -208,6 +214,8 @@ void kad_uv_protocol_find_value(const kad_find_value_args_t *args)
         args->callback(false, NULL, args->user);
         return;
     }
+
+    kad_info("finding values at %s:%d\n", args->host, args->port);
 
     uv_udp_send_t  *send_req = kad_alloc(1, sizeof(uv_udp_send_t));
     send_context_t *send_ctx = kad_alloc(1, sizeof(send_context_t));
@@ -472,12 +480,6 @@ void recv_cb_request_store(uv_udp_t *handle, kad_request_t *req, const struct so
     }
 }
 
-void find_node_cb(const kad_contact_t *c, void *data)
-{
-    find_node_context_t *find_context = (find_node_context_t *)(data);
-    find_context->contacts[find_context->i++] = *c;
-}
-
 void recv_cb_request_find_node(uv_udp_t *handle, kad_request_t *req, const struct sockaddr *addr, int req_id)
 {
     kad_uv_protocol_t *self = (kad_uv_protocol_t *)(handle->data);
@@ -485,22 +487,20 @@ void recv_cb_request_find_node(uv_udp_t *handle, kad_request_t *req, const struc
     // Execute.
     recv_cb_request_add_contact(self, &req->d.find_node.id, addr);
 
-    find_node_context_t find_ctx = {
-        .contacts = kad_alloc(self->table->capacity, sizeof(kad_contact_t)),
-        .i = 0,
-    };
-    kad_table_find_closest(self->table, &req->d.find_node.target_id, &req->d.find_node.id, find_node_cb, &find_ctx);
+    kad_contact_t *contacts = NULL;
+    int            contacts_size = 0;
+    kad_table_find_closest(self->table, &req->d.find_node.target_id, &req->d.find_node.id, &contacts, &contacts_size);
 
     // Setup.
     uv_udp_send_t           *send_request = kad_alloc(1, sizeof(uv_udp_send_t));
     send_response_context_t *send_context = kad_alloc(1, sizeof(send_response_context_t));
 
-    send_context->payload_str = create_find_node_response(find_ctx.contacts, find_ctx.i, req_id);
+    send_context->payload_str = create_find_node_response(contacts, contacts_size, req_id);
 
     send_request->data = (void *)(send_context);
 
     // Cleanup.
-    free(find_ctx.contacts);
+    free(contacts);
 
     // Send.
     uv_buf_t response_buf = uv_buf_init(send_context->payload_str, strlen(send_context->payload_str) + 1);
@@ -521,21 +521,19 @@ void recv_cb_request_find_value(uv_udp_t *handle, kad_request_t *req, const stru
     kad_id_t target_id;
     kad_uint256_from_key(req->d.find_value.key, &target_id);
 
-    find_node_context_t find_ctx = {
-        .contacts = kad_alloc(self->table->capacity, sizeof(kad_contact_t)),
-        .i = 0,
-    };
-    kad_table_find_closest(self->table, &target_id, &req->d.find_value.id, find_node_cb, &find_ctx);
+    kad_contact_t *contacts = NULL;
+    int            contacts_size = 0;
+    kad_table_find_closest(self->table, &target_id, &req->d.find_value.id, &contacts, &contacts_size);
 
     // Setup.
     uv_udp_send_t           *send_request = kad_alloc(1, sizeof(uv_udp_send_t));
     send_response_context_t *send_context = kad_alloc(1, sizeof(send_response_context_t));
     const char              *value = self->storage ? kad_storage_lookup(self->storage, req->d.find_value.key) : NULL;
-    send_context->payload_str = create_find_value_response(value, find_ctx.contacts, find_ctx.i, req_id);
+    send_context->payload_str = create_find_value_response(value, contacts, contacts_size, req_id);
     send_request->data = (void *)(send_context);
 
     // Cleanup.
-    free(find_ctx.contacts);
+    free(contacts);
 
     // Send.
     uv_buf_t response_buf = uv_buf_init(send_context->payload_str, strlen(send_context->payload_str) + 1);

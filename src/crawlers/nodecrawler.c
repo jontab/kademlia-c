@@ -6,9 +6,10 @@
 // Typedefs
 //
 
-typedef struct n_findresults_s n_findresults_t;
-typedef struct n_findcontext_s n_findcontext_t;
-typedef struct n_nodecontext_s n_nodecontext_t;
+typedef struct n_findresults_s   n_findresults_t;
+typedef struct n_findcontext_s   n_findcontext_t;
+typedef struct n_nodecontext_s   n_nodecontext_t;
+typedef struct n_resultcontext_s n_resultcontext_t;
 
 //
 // Structs
@@ -46,6 +47,12 @@ struct n_nodecontext_s
     void               *gotresultuser;
 };
 
+struct n_resultcontext_s
+{
+    kad_contact_t *contacts;
+    int            contacts_size;
+};
+
 //
 // Decls
 //
@@ -54,7 +61,7 @@ static void kad_nodecrawler_handle(kad_nodecrawler_t *s, n_findresults_t *result
 static void kad_nodecrawler_find_unmarked_cb(const kad_contact_t *unmarked, void *user);
 static void kad_nodecrawler_find_unmarked_length(const kad_contact_t *unmarked, void *user);
 static void kad_nodecrawler_find_node_cb(bool ok, void *result, void *user);
-
+static void kad_nodecrawler_find_transfer_results(const kad_contact_t *contact, void *user);
 //
 // Public
 //
@@ -131,7 +138,10 @@ void kad_nodecrawler_handle(kad_nodecrawler_t *s, n_findresults_t *results, kad_
 
     if (kad_contactheap_done(&s->nearest))
     {
-        kad_contactheap_iter(&s->nearest, cb, data);
+        n_resultcontext_t result = {0};
+        kad_contactheap_iter(&s->nearest, kad_nodecrawler_find_transfer_results, &result);
+        cb(result.contacts, result.contacts_size, data);
+        free(result.contacts);
         return;
     }
 
@@ -205,4 +215,13 @@ void kad_nodecrawler_find_node_cb(bool ok, void *result, void *user)
     }
 
     free(c);
+}
+
+void kad_nodecrawler_find_transfer_results(const kad_contact_t *contact, void *user)
+{
+    // TODO: Use list structure --- pre-allocate results.
+    n_resultcontext_t *context = (n_resultcontext_t *)(user);
+    context->contacts_size++;
+    context->contacts = kad_realloc(context->contacts, context->contacts_size * sizeof(kad_contact_t));
+    context->contacts[context->contacts_size - 1] = *contact;
 }

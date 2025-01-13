@@ -183,7 +183,7 @@ int kad_table_traverse_buckets(const kad_table_t *s, int bix, int (*cb)(const ka
 int kad_table_find_closest_inner(const kad_contact_t *c, void *data)
 {
     find_closest_user_t *user = (find_closest_user_t *)(data);
-    if (kad_uint256_cmp(&c->id, user->exclude) != 0)
+    if (!user->exclude || (kad_uint256_cmp(&c->id, user->exclude) != 0))
     {
         kad_uint256_t dist;
         kad_uint256_xor(&c->id, user->id, &dist);
@@ -226,8 +226,8 @@ int kad_table_find_closest_inner(const kad_contact_t *c, void *data)
     }
 }
 
-void kad_table_find_closest(const kad_table_t *s, const kad_id_t *id, const kad_id_t *exclude,
-                            void (*cb)(const kad_contact_t *c, void *data), void *data)
+void kad_table_find_closest(const kad_table_t *s, const kad_id_t *id, const kad_id_t *exclude, kad_contact_t **contacts,
+                            int *contacts_size)
 {
     find_closest_user_t user = {.id = id, .exclude = exclude, .capacity = s->capacity};
     user.closest = kad_alloc(s->capacity, sizeof(user.closest[0]));
@@ -236,13 +236,10 @@ void kad_table_find_closest(const kad_table_t *s, const kad_id_t *id, const kad_
     // Execute.
     int bix = kad_table_get_bucket_index(s, id);
     kad_table_traverse_buckets(s, bix, kad_table_find_closest_inner, &user);
-    for (int i = 0; i < user.nclosest; i++)
-    {
-        cb(&user.closest[i], data);
-    }
+    *contacts = user.closest; // Transfer.
+    *contacts_size = user.nclosest;
 
     // Cleanup.
-    free(user.closest);
     free(user.distances);
 }
 

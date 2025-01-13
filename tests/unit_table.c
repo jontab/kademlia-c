@@ -87,42 +87,29 @@ MunitResult unit_table_remove_contact(const MunitParameter params[], void *data)
     return MUNIT_OK;
 }
 
-void unit_table_find_closest_cb(const kad_contact_t *c, void *data)
+void unit_table_find_closest_check(const kad_contact_t *contacts, int contacts_size)
 {
-    int *i = (int *)(intptr_t)(data);
-    switch (*i)
-    {
-    case 0: {
-        kad_id_t id = {{0x80000000, 0, 0, 0, 0, 0, 2, 0}};
-        munit_assert_int(kad_uint256_cmp(&c->id, &id), ==, 0);
-        (*i)++;
-        break;
-    }
+    munit_assert_int(contacts_size, ==, 4);
+    kad_id_t id_0 = contacts[0].id;
+    kad_id_t id_1 = contacts[1].id;
+    kad_id_t id_2 = contacts[2].id;
+    kad_id_t id_3 = contacts[3].id;
 
-    case 1: {
-        kad_id_t id = {{0x80000000, 0, 0, 0, 0, 3, 0, 0}};
-        munit_assert_int(kad_uint256_cmp(&c->id, &id), ==, 0);
-        (*i)++;
-        break;
-    }
+    // 0.
+    kad_id_t want_0 = {{0x80000000, 0, 0, 0, 0, 0, 2, 0}};
+    munit_assert_int(kad_uint256_cmp(&id_0, &want_0), ==, 0);
 
-    case 2: {
-        kad_id_t id = {{0x80000000, 0, 0, 0, 4, 0, 0, 0}};
-        munit_assert_int(kad_uint256_cmp(&c->id, &id), ==, 0);
-        (*i)++;
-        break;
-    }
+    // 1.
+    kad_id_t want_1 = {{0x80000000, 0, 0, 0, 0, 3, 0, 0}};
+    munit_assert_int(kad_uint256_cmp(&id_1, &want_1), ==, 0);
 
-    case 3: {
-        kad_id_t id = {{0x00000000, 0, 0, 0, 0, 0, 0, 1}};
-        munit_assert_int(kad_uint256_cmp(&c->id, &id), ==, 0);
-        (*i)++;
-        break;
-    }
+    // 2.
+    kad_id_t want_2 = {{0x80000000, 0, 0, 0, 4, 0, 0, 0}};
+    munit_assert_int(kad_uint256_cmp(&id_2, &want_2), ==, 0);
 
-    default:
-        munit_assert_true(false); // There should only be 4 contacts.
-    }
+    // 3.
+    kad_id_t want_3 = {{0x00000000, 0, 0, 0, 0, 0, 0, 1}};
+    munit_assert_int(kad_uint256_cmp(&id_3, &want_3), ==, 0);
 }
 
 MunitResult unit_table_find_closest(const MunitParameter params[], void *data)
@@ -149,10 +136,14 @@ MunitResult unit_table_find_closest(const MunitParameter params[], void *data)
     }
 
     // Execute.
-    int       i = 0;
-    kad_id_t *id = &conts[4].id;
-    kad_id_t *ex = id;
-    kad_table_find_closest(&t, id, ex, unit_table_find_closest_cb, (void *)(&i));
+    kad_id_t      *id = &conts[4].id;
+    kad_id_t      *ex = id;
+    kad_contact_t *contacts = NULL;
+    int            contacts_size = 0;
+    kad_table_find_closest(&t, id, ex, &contacts, &contacts_size);
+    unit_table_find_closest_check(contacts, contacts_size);
+
+    free(contacts);
 
     // Cleanup.
     kad_table_fini(&t);

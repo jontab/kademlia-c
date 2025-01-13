@@ -38,10 +38,11 @@ jonab@MacBookPro kademlia-c % git submodule update --init --recursive --depth=1
 
 - [x] Uint256, Contact, OrderedDict, and Bucket.
 - [x] Routing table (without protocol for replacing old peer).
-- [ ] Contact heap.
-- [ ] Crawler and contract crawler.
+- [x] Contact heap.
+- [x] Crawler and contract crawler.
 - [x] Protocol.
-- [ ] Client.
+- [x] Client.
+- [ ] Client refreshing.
 
 # Stretch goals
 

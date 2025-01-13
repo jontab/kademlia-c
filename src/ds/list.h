@@ -24,6 +24,8 @@
     void NAME##_fini(NAME##_t *l);                                                                                     \
     void NAME##_reserve(NAME##_t *l, int size);                                                                        \
     void NAME##_insert(NAME##_t *l, TYPE data, int at);                                                                \
+    void NAME##_insort(NAME##_t *self, TYPE data, int (*compare)(TYPE * left, TYPE * right, void *user), void *user);  \
+    void NAME##_clone(NAME##_t *self, TYPE *data, int size);                                                           \
     void NAME##_append(NAME##_t *l, TYPE data);                                                                        \
     void NAME##_remove(NAME##_t *l, int at);
 
@@ -58,6 +60,36 @@
         NAME##_reserve(l, l->size + 1);                                                                                \
         memmove(&l->data[at + 1], &l->data[at], (l->size++ - at) * sizeof(TYPE));                                      \
         l->data[at] = data;                                                                                            \
+    }                                                                                                                  \
+                                                                                                                       \
+    void NAME##_insort(NAME##_t *self, TYPE data, int (*compare)(TYPE * left, TYPE * right, void *user), void *user)   \
+    {                                                                                                                  \
+        int l = 0;                                                                                                     \
+        int r = self->size;                                                                                            \
+        while (l < r)                                                                                                  \
+        {                                                                                                              \
+            int mid = (l + r) / 2;                                                                                     \
+            int cmp = compare(&self->data[mid], &data, user);                                                          \
+            if (cmp < 0)                                                                                               \
+            {                                                                                                          \
+                l = mid + 1;                                                                                           \
+            }                                                                                                          \
+            else                                                                                                       \
+            {                                                                                                          \
+                r = mid;                                                                                               \
+            }                                                                                                          \
+        }                                                                                                              \
+                                                                                                                       \
+        NAME##_insert(self, data, l);                                                                                  \
+    }                                                                                                                  \
+                                                                                                                       \
+    void NAME##_clone(NAME##_t *self, TYPE *data, int size)                                                            \
+    {                                                                                                                  \
+        NAME##_reserve(self, size);                                                                                    \
+        for (int i = 0; i < size; i++)                                                                                 \
+        {                                                                                                              \
+            NAME##_append(self, data[i]);                                                                              \
+        }                                                                                                              \
     }                                                                                                                  \
                                                                                                                        \
     void NAME##_append(NAME##_t *l, TYPE data)                                                                         \

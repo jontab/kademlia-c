@@ -62,6 +62,7 @@ static void kad_client_bootstrap_crawler_callback(const kad_contact_t *contacts,
 static void kad_client_insert_callback(const kad_contact_t *contacts, int contacts_size, void *user);
 static void kad_client_insert_callback_store(bool ok, void *result, void *user);
 static void kad_client_lookup_callback(const char *value, void *user);
+static int  insort_compare(kad_contact_t *left, kad_contact_t *right, void *user);
 
 /******************************************************************************/
 /* Public                                                                     */
@@ -140,6 +141,60 @@ void kad_client_bootstrap(kad_client_t *self, const char **hosts, int *ports, in
             .user = context,
         });
     }
+}
+
+void kad_client_lookup(kad_client_t *self, const char *key, lookup_then_t then, void *user)
+{
+    kad_contactlist_t contacts = {0};
+    kad_table_find_closest(&self->table, &self->id, &self->id, &contacts);
+    kad_valuecrawlerargs_t args = {
+        .id = self->id,
+        .key = key,
+        .capacity = self->capacity,
+        .alpha = DEFAULT_ALPHA,
+        .contacts = contacts.data,
+        .contacts_size = contacts.size,
+        .proto = (kad_protocol_t *)(self->protocol),
+    };
+    lookup_context_t *context = kad_alloc(1, sizeof(lookup_context_t));
+    *context = (lookup_context_t){
+        .then = then,
+        .then_data = user,
+        .crawler = kad_alloc(1, sizeof(kad_valuecrawler_t)),
+    };
+    kad_valuecrawler_init(context->crawler, &args);
+    kad_valuecrawler_find(context->crawler, kad_client_lookup_callback, context);
+    kad_contactlist_fini(&contacts);
+}
+
+void kad_client_insert(kad_client_t *self, const char *key, const char *value, insert_then_t then, void *user)
+{
+    kad_contactlist_t contacts = {0};
+    kad_table_find_closest(&self->table, &self->id, &self->id, &contacts);
+    kad_nodecrawlerargs_t args = {
+        .id = self->id,
+        .target = {0},
+        .capacity = self->capacity,
+        .alpha = DEFAULT_ALPHA,
+        .contacts = contacts.data,
+        .contacts_size = contacts.size,
+        .proto = (kad_protocol_t *)(self->protocol),
+    };
+    kad_uint256_from_key(key, &args.target);
+    insert_context_t *context = kad_alloc(1, sizeof(insert_context_t));
+    *context = (insert_context_t){
+        .key = {0},
+        .value = {0},
+        .self = self,
+        .then = then,
+        .then_data = user,
+        .crawler = kad_alloc(1, sizeof(kad_nodecrawler_t)),
+    };
+    strncpy(context->key, key, sizeof(context->key) - 1);
+    strncpy(context->value, value, sizeof(context->value) - 1);
+    kad_nodecrawler_init(context->crawler, &args);
+    kad_nodecrawler_find(context->crawler, kad_client_insert_callback, context);
+    kad_contactlist_fini(&contacts);
 }
 
 /******************************************************************************/
@@ -232,89 +287,61 @@ void kad_client_bootstrap_crawler_callback(const kad_contact_t *contacts, int co
     context->then(context->then_data);
 }
 
-void kad_client_lookup(kad_client_t *self, const char *key, lookup_then_t then, void *user)
-{
-    kad_contactlist_t contacts = {0};
-    kad_table_find_closest(&self->table, &self->id, &self->id, &contacts);
-    kad_valuecrawlerargs_t args = {
-        .id = self->id,
-        .key = key,
-        .capacity = self->capacity,
-        .alpha = DEFAULT_ALPHA,
-        .contacts = contacts.data,
-        .contacts_size = contacts.size,
-        .proto = (kad_protocol_t *)(self->protocol),
-    };
-    lookup_context_t *context = kad_alloc(1, sizeof(lookup_context_t));
-    *context = (lookup_context_t){
-        .then = then,
-        .then_data = user,
-        .crawler = kad_alloc(1, sizeof(kad_valuecrawler_t)),
-    };
-    kad_valuecrawler_init(context->crawler, &args);
-    kad_valuecrawler_find(context->crawler, kad_client_lookup_callback, context);
-    kad_contactlist_fini(&contacts);
-}
-
-void kad_client_insert(kad_client_t *self, const char *key, const char *value, insert_then_t then, void *user)
-{
-    kad_contactlist_t contacts = {0};
-    kad_table_find_closest(&self->table, &self->id, &self->id, &contacts);
-    kad_nodecrawlerargs_t args = {
-        .id = self->id,
-        .target = {0},
-        .capacity = self->capacity,
-        .alpha = DEFAULT_ALPHA,
-        .contacts = contacts.data,
-        .contacts_size = contacts.size,
-        .proto = (kad_protocol_t *)(self->protocol),
-    };
-    kad_uint256_from_key(key, &args.target);
-    insert_context_t *context = kad_alloc(1, sizeof(insert_context_t));
-    *context = (insert_context_t){
-        .key = {0},
-        .value = {0},
-        .self = self,
-        .then = then,
-        .then_data = user,
-        .crawler = kad_alloc(1, sizeof(kad_nodecrawler_t)),
-    };
-    strncpy(context->key, key, sizeof(context->key) - 1);
-    strncpy(context->value, value, sizeof(context->value) - 1);
-    kad_nodecrawler_init(context->crawler, &args);
-    kad_nodecrawler_find(context->crawler, kad_client_insert_callback, context);
-    kad_contactlist_fini(&contacts);
-}
-
-//
-// Statics
-//
-
 void kad_client_insert_callback(const kad_contact_t *contacts, int contacts_size, void *user)
 {
     insert_context_t *context = (insert_context_t *)(user);
-    context->total_store_count = contacts_size;
+
+    kad_contactlist_t insert_into = {0};
+    int               insert_size = MIN(contacts_size + 1, context->self->capacity);
+    kad_contactlist_clone(&insert_into, contacts, contacts_size);
+    kad_contactlist_insort(&insert_into, (kad_contact_t){.id = context->self->id}, insort_compare, context);
+
+    // Determine the number of outbound calls we are expecting.
+    context->total_store_count = 0; // # of outbound calls (excl. ourselves).
     context->store_count = 0;
-
-    for (int i = 0; i < contacts_size; i++)
+    for (int i = 0; i < insert_size; i++)
     {
-        kad_client_t   *self = context->self;
-        kad_protocol_t *protocol = (kad_protocol_t *)(self->protocol);
-
-        const char *contact_host = contacts[i].host;
-        int         contact_port = contacts[i].port;
-
-        protocol->store(&(kad_store_args_t){
-            .self = protocol,
-            .id = &self->id,
-            .key = context->key,
-            .value = context->value,
-            .host = contact_host,
-            .port = contact_port,
-            .callback = kad_client_insert_callback_store,
-            .user = context,
-        });
+        kad_contact_t *contact = &insert_into.data[i];
+        if (kad_uint256_cmp(&contact->id, &context->self->id) == 0)
+        {
+        }
+        else
+        {
+            context->total_store_count++;
+        }
     }
+
+    for (int i = 0; i < insert_size; i++)
+    {
+        kad_contact_t *contact = &insert_into.data[i];
+        if (kad_uint256_cmp(&contact->id, &context->self->id) == 0)
+        {
+            kad_debug("inserting into ourselves\n");
+            kad_storage_put(&context->self->storage, context->key, context->value);
+        }
+        else
+        {
+            kad_debug("inserting into another node\n");
+            kad_client_t   *self = context->self;
+            kad_protocol_t *protocol = (kad_protocol_t *)(self->protocol);
+
+            const char *contact_host = insert_into.data[i].host;
+            int         contact_port = insert_into.data[i].port;
+
+            protocol->store(&(kad_store_args_t){
+                .self = protocol,
+                .id = &self->id,
+                .key = context->key,
+                .value = context->value,
+                .host = contact_host,
+                .port = contact_port,
+                .callback = kad_client_insert_callback_store,
+                .user = context,
+            });
+        }
+    }
+
+    kad_contactlist_fini(&insert_into);
 }
 
 void kad_client_insert_callback_store(bool ok, void *result, void *user)
@@ -338,4 +365,14 @@ void kad_client_lookup_callback(const char *value, void *user)
     kad_valuecrawler_fini(context->crawler);
     context->then(value, context->then_data);
     free(context);
+}
+
+int insort_compare(kad_contact_t *left, kad_contact_t *right, void *user)
+{
+    insert_context_t *context = (insert_context_t *)(user);
+    kad_uint256_t     ldist;
+    kad_uint256_t     rdist;
+    kad_uint256_xor(&left->id, &context->self->id, &ldist);
+    kad_uint256_xor(&left->id, &context->self->id, &rdist);
+    return kad_uint256_cmp(&ldist, &rdist);
 }

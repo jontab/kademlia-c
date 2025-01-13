@@ -1,6 +1,6 @@
 #include "table.h"
 #include "alloc.h"
-#include "log.h"
+#include "logging.h"
 #include "protocol.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -106,9 +106,9 @@ int kad_table_get_bucket_index(const kad_table_t *s, const kad_id_t *id)
         }
     }
 
-    kad_error("Identifier does not fall into any bucket.\n");
-    kad_error("  id:       %U\n", id);
-    kad_error("  nbuckets: %d\n", s->nbuckets);
+    ERROR("Identifier does not fall into any bucket.\n");
+    ERROR("  id:       %U\n", id);
+    ERROR("  nbuckets: %d\n", s->nbuckets);
     abort();
 }
 

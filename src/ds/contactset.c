@@ -1,6 +1,6 @@
 #include "contactset.h"
 #include "../alloc.h"
-#include "../log.h"
+#include "../logging.h"
 #include <stdlib.h>
 #include <string.h>
 

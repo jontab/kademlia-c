@@ -1,6 +1,6 @@
 #include "valuecrawler.h"
 #include "../alloc.h"
-#include "log.h"
+#include "logging.h"
 
 /******************************************************************************/
 /* Typedefs                                                                   */

@@ -1,6 +1,7 @@
 #include "bucket.h"
 #include "alloc.h"
-#include "log.h"
+#include "logging.h"
+#include "logging.h"
 #include <assert.h>
 #include <stdlib.h>
 
@@ -79,8 +80,7 @@ void kad_bucket_remove_contact(kad_bucket_t *s, const kad_id_t *id)
         if (kad_ordereddict_popback(&s->replacements, &promoted))
         {
             kad_ordereddict_insert(&s->contacts, &promoted);
-            kad_debug("Promoted contact from replacements to contact list\n");
-            kad_debug("%C\n", &promoted);
+            DEBUG("Promoted contact from replacements to contact list");
         }
     }
 }

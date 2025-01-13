@@ -1,6 +1,6 @@
 #include "nodecrawler.h"
 #include "../alloc.h"
-#include "log.h"
+#include "logging.h"
 
 /******************************************************************************/
 /* Typedefs                                                                   */
@@ -193,8 +193,7 @@ void kad_nodecrawler_find_node_cb(bool ok, void *result, void *user)
     c->results->oks = kad_realloc(c->results->oks, c->results->size * sizeof(bool));
     c->results->data = kad_realloc(c->results->data, c->results->size * sizeof(kad_result_t));
 
-    kad_info("find_node: got incremental result\n");
-
+    DEBUG("find_node: got incremental result");
     if (ok)
     {
         c->results->ids[c->results->size - 1] = c->id;
@@ -210,7 +209,7 @@ void kad_nodecrawler_find_node_cb(bool ok, void *result, void *user)
 
     if (c->results->size == c->ndispatched)
     {
-        kad_info("find_node: gathered %d results\n", c->ndispatched);
+        DEBUG("find_node: gathered %d results", c->ndispatched);
         kad_nodecrawler_handle(c->s, c->results, c->gotresult, c->gotresultuser);
         free(c->results);
     }

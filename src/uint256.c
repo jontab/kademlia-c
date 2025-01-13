@@ -1,5 +1,5 @@
 #include "uint256.h"
-#include "log.h"
+#include "logging.h"
 #include <openssl/sha.h>
 #include <stdlib.h>
 #include <string.h>
@@ -124,19 +124,19 @@ void kad_uint256_from_key(const char *key, kad_uint256_t *out)
     SHA256_CTX sha256;
     if (SHA256_Init(&sha256) < 0)
     {
-        kad_fatal("SHA256_Init failed");
+        FATAL("SHA256_Init failed");
         abort();
     }
 
     if (SHA256_Update(&sha256, key, strlen(key)) < 0)
     {
-        kad_fatal("SHA256_Update failed");
+        FATAL("SHA256_Update failed");
         abort();
     }
 
     if (SHA256_Final(digest, &sha256) < 0)
     {
-        kad_fatal("SHA256_Final failed");
+        FATAL("SHA256_Final failed");
         abort();
     }
 

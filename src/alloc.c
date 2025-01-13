@@ -1,5 +1,5 @@
 #include "alloc.h"
-#include "log.h"
+#include "logging.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -25,7 +25,7 @@ void kad_check(void *data, const char *message)
 {
     if (!data)
     {
-        kad_fatal("%s\n", message);
+        FATAL("%s\n", message);
         abort();
     }
 }

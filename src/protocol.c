@@ -1,7 +1,7 @@
 #include "protocol.h"
 #include "alloc.h"
 #include "cJSON.h"
-#include "log.h"
+#include "logging.h"
 #include "rpc.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -99,7 +99,7 @@ void kad_uv_protocol_free(kad_uv_protocol_t *self)
     int ret = uv_udp_recv_stop(&self->socket);
     if (ret < 0)
     {
-        kad_error("kad_uv_protocol_free: uv_udp_recv_stop failed: %s\n", uv_strerror(ret));
+        ERROR("kad_uv_protocol_free: uv_udp_recv_stop failed: %s\n", uv_strerror(ret));
     }
 }
 
@@ -120,12 +120,10 @@ void kad_uv_protocol_ping(const kad_ping_args_t *args)
     int                ret;
     if ((ret = uv_ip4_addr(args->host, args->port, &addr)) < 0)
     {
-        kad_error("kad_uv_protocol_ping: uv_ip4_addr failed: %s\n", uv_strerror(ret));
+        ERROR("kad_uv_protocol_ping: uv_ip4_addr failed: %s\n", uv_strerror(ret));
         args->callback(false, NULL, args->user);
         return;
     }
-
-    kad_info("pinging %s:%d\n", args->host, args->port);
 
     uv_udp_send_t  *send_req = kad_alloc(1, sizeof(uv_udp_send_t));
     send_context_t *send_ctx = kad_alloc(1, sizeof(send_context_t));
@@ -135,13 +133,13 @@ void kad_uv_protocol_ping(const kad_ping_args_t *args)
     send_ctx->resolve = args->callback;
     send_ctx->type = KAD_PING;
     send_ctx->payload_str = create_ping_request(args->id, &send_ctx->request_id);
-
     send_req->data = (void *)(send_ctx);
+    INFO("%s:%d << %s", args->host, args->port, send_ctx->payload_str);
 
     uv_buf_t payload_buf = uv_buf_init(send_ctx->payload_str, strlen(send_ctx->payload_str) + 1);
     if ((ret = uv_udp_send(send_req, &self->socket, &payload_buf, 1, (struct sockaddr *)(&addr), send_request_cb)) < 0)
     {
-        kad_error("kad_uv_protocol_ping: uv_udp_send failed: %s\n", uv_strerror(ret));
+        ERROR("kad_uv_protocol_ping: uv_udp_send failed: %s\n", uv_strerror(ret));
         args->callback(false, NULL, args->user);
     }
 }
@@ -154,12 +152,10 @@ void kad_uv_protocol_store(const kad_store_args_t *args)
     int                ret;
     if ((ret = uv_ip4_addr(args->host, args->port, &addr)) < 0)
     {
-        kad_error("kad_uv_protocol_store: uv_ip4_addr failed: %s\n", uv_strerror(ret));
+        ERROR("kad_uv_protocol_store: uv_ip4_addr failed: %s\n", uv_strerror(ret));
         args->callback(false, NULL, args->user);
         return;
     }
-
-    kad_info("storing at %s:%d\n", args->host, args->port);
 
     uv_udp_send_t  *send_req = kad_alloc(1, sizeof(uv_udp_send_t));
     send_context_t *send_ctx = kad_alloc(1, sizeof(send_context_t));
@@ -169,13 +165,13 @@ void kad_uv_protocol_store(const kad_store_args_t *args)
     send_ctx->resolve = args->callback;
     send_ctx->type = KAD_STORE;
     send_ctx->payload_str = create_store_request(args->id, args->key, args->value, &send_ctx->request_id);
-
     send_req->data = (void *)(send_ctx);
+    INFO("%s:%d << %s", args->host, args->port, send_ctx->payload_str);
 
     uv_buf_t payload_buf = uv_buf_init(send_ctx->payload_str, strlen(send_ctx->payload_str) + 1);
     if ((ret = uv_udp_send(send_req, &self->socket, &payload_buf, 1, (struct sockaddr *)(&addr), send_request_cb)) < 0)
     {
-        kad_error("kad_uv_protocol_store: uv_udp_send failed: %s\n", uv_strerror(ret));
+        ERROR("kad_uv_protocol_store: uv_udp_send failed: %s\n", uv_strerror(ret));
         args->callback(false, NULL, args->user);
     }
 }
@@ -188,12 +184,10 @@ void kad_uv_protocol_find_node(const kad_find_node_args_t *args)
     int                ret;
     if ((ret = uv_ip4_addr(args->host, args->port, &addr)) < 0)
     {
-        kad_error("kad_uv_protocol_find_node: uv_ip4_addr failed: %s\n", uv_strerror(ret));
+        ERROR("kad_uv_protocol_find_node: uv_ip4_addr failed: %s\n", uv_strerror(ret));
         args->callback(false, NULL, args->user);
         return;
     }
-
-    kad_info("finding nodes at %s:%d\n", args->host, args->port);
 
     uv_udp_send_t  *send_req = kad_alloc(1, sizeof(uv_udp_send_t));
     send_context_t *send_ctx = kad_alloc(1, sizeof(send_context_t));
@@ -203,13 +197,13 @@ void kad_uv_protocol_find_node(const kad_find_node_args_t *args)
     send_ctx->resolve = args->callback;
     send_ctx->type = KAD_FIND_NODE;
     send_ctx->payload_str = create_find_node_request(args->id, args->target_id, &send_ctx->request_id);
-
     send_req->data = (void *)(send_ctx);
+    INFO("%s:%d << %s", args->host, args->port, send_ctx->payload_str);
 
     uv_buf_t payload_buf = uv_buf_init(send_ctx->payload_str, strlen(send_ctx->payload_str) + 1);
     if ((ret = uv_udp_send(send_req, &self->socket, &payload_buf, 1, (struct sockaddr *)(&addr), send_request_cb)) < 0)
     {
-        kad_error("kad_uv_protocol_find_node: uv_udp_send failed: %s\n", uv_strerror(ret));
+        ERROR("kad_uv_protocol_find_node: uv_udp_send failed: %s\n", uv_strerror(ret));
         args->callback(false, NULL, args->user);
     }
 }
@@ -222,12 +216,10 @@ void kad_uv_protocol_find_value(const kad_find_value_args_t *args)
     int                ret;
     if ((ret = uv_ip4_addr(args->host, args->port, &addr)) < 0)
     {
-        kad_error("kad_uv_protocol_find_value: uv_ip4_addr failed: %s\n", uv_strerror(ret));
+        ERROR("kad_uv_protocol_find_value: uv_ip4_addr failed: %s\n", uv_strerror(ret));
         args->callback(false, NULL, args->user);
         return;
     }
-
-    kad_info("finding values at %s:%d\n", args->host, args->port);
 
     uv_udp_send_t  *send_req = kad_alloc(1, sizeof(uv_udp_send_t));
     send_context_t *send_ctx = kad_alloc(1, sizeof(send_context_t));
@@ -237,13 +229,13 @@ void kad_uv_protocol_find_value(const kad_find_value_args_t *args)
     send_ctx->resolve = args->callback;
     send_ctx->type = KAD_FIND_VALUE;
     send_ctx->payload_str = create_find_value_request(args->id, args->key, &send_ctx->request_id);
-
     send_req->data = (void *)(send_ctx);
+    INFO("%s:%d << %s", args->host, args->port, send_ctx->payload_str);
 
     uv_buf_t payload_buf = uv_buf_init(send_ctx->payload_str, strlen(send_ctx->payload_str) + 1);
     if ((ret = uv_udp_send(send_req, &self->socket, &payload_buf, 1, (struct sockaddr *)(&addr), send_request_cb)) < 0)
     {
-        kad_error("kad_uv_protocol_find_value: uv_udp_send failed: %s\n", uv_strerror(ret));
+        ERROR("kad_uv_protocol_find_value: uv_udp_send failed: %s\n", uv_strerror(ret));
         args->callback(false, NULL, args->user);
     }
 }
@@ -254,26 +246,26 @@ void kad_uv_protocol_start_recv(kad_uv_protocol_t *self, const char *host, int p
     int                ret;
     if ((ret = uv_ip4_addr(host, port, &recv_addr)) < 0)
     {
-        kad_error("kad_uv_protocol_start_recv: uv_ip4_addr failed: %s\n", uv_strerror(ret));
+        ERROR("kad_uv_protocol_start_recv: uv_ip4_addr failed: %s\n", uv_strerror(ret));
         return;
     }
 
     if ((ret = uv_udp_init(self->loop, &self->socket)) < 0)
     {
-        kad_error("kad_uv_protocol_start_recv: uv_udp_init failed: %s\n", uv_strerror(ret));
+        ERROR("kad_uv_protocol_start_recv: uv_udp_init failed: %s\n", uv_strerror(ret));
         return;
     }
 
     if ((ret = uv_udp_bind(&self->socket, (struct sockaddr *)(&recv_addr), 0)) < 0)
     {
-        kad_error("kad_uv_protocol_start_recv: uv_udp_bind failed: %s\n", uv_strerror(ret));
+        ERROR("kad_uv_protocol_start_recv: uv_udp_bind failed: %s\n", uv_strerror(ret));
         return;
     }
 
     self->socket.data = (void *)(self);
     if ((ret = uv_udp_recv_start(&self->socket, uv_buf_alloc, recv_cb)) < 0)
     {
-        kad_error("kad_uv_protocol_start_recv: uv_udp_recv_start failed: %s\n", uv_strerror(ret));
+        ERROR("kad_uv_protocol_start_recv: uv_udp_recv_start failed: %s\n", uv_strerror(ret));
     }
 }
 
@@ -300,7 +292,7 @@ void send_request_cb(uv_udp_send_t *send_request, int status)
     }
     else
     {
-        kad_error("uv_udp_send failed: %s\n", uv_strerror(status));
+        ERROR("uv_udp_send failed: %s\n", uv_strerror(status));
     }
 
     free(send_context->payload_str);
@@ -323,7 +315,7 @@ void send_response_cb(uv_udp_send_t *send_request, int status)
     send_response_context_t *send_context = (send_response_context_t *)(send_request->data);
     if (status)
     {
-        kad_error("send_response_cb: failed to send response: %s\n", uv_strerror(status));
+        ERROR("send_response_cb: failed to send response: %s\n", uv_strerror(status));
     }
 
     free(send_context->payload_str);
@@ -336,7 +328,7 @@ void recv_cb(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf, const struct 
     kad_uv_protocol_t *self = (kad_uv_protocol_t *)(handle->data);
     if (nread < 0)
     {
-        kad_warn("recv_cb: negative nread\n");
+        WARN("recv_cb: negative nread\n");
         return;
     }
 
@@ -353,14 +345,14 @@ void recv_cb(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf, const struct 
         int                 addr_port = ntohs(addr_in->sin_port);
         if (uv_ip4_name((struct sockaddr_in *)(addr_in), addr_host, sizeof(addr_host) - 1) == 0)
         {
-            kad_debug("got data from %s:%d\n", addr_host, addr_port);
+            DEBUG("%s:%d >> %*s", addr_host, addr_port, nread, buf->base);
         }
     }
 
     void *parse_data = kad_payload_parse(buf->base, nread);
     if (!parse_data)
     {
-        kad_warn("recv_cb: failed to parse payload\n");
+        WARN("recv_cb: failed to parse payload\n");
         return;
     }
 
@@ -368,7 +360,7 @@ void recv_cb(uv_udp_t *handle, ssize_t nread, const uv_buf_t *buf, const struct 
     int request_id;
     if (!kad_payload_request_id(parse_data, &request_id))
     {
-        kad_warn("recv_cb: failed to parse request_id\n");
+        WARN("recv_cb: failed to parse request_id\n");
         kad_result_fini(NULL, parse_data);
         return;
     }
@@ -392,7 +384,7 @@ void recv_cb_request(uv_udp_t *handle, void *parse_data, const struct sockaddr *
     kad_request_t request;
     if (!kad_payload_parse_request(parse_data, &request))
     {
-        kad_warn("recv_cb_request: failed to parse request\n");
+        WARN("recv_cb_request: failed to parse request\n");
         kad_request_fini(NULL, parse_data);
         return;
     }
@@ -414,7 +406,7 @@ void recv_cb_request(uv_udp_t *handle, void *parse_data, const struct sockaddr *
 
     // TODO: Other types.
     default:
-        kad_warn("recv_cb_request: unhandled request type: %d\n", request.type);
+        WARN("recv_cb_request: unhandled request type: %d\n", request.type);
         break;
     }
 
@@ -435,7 +427,6 @@ void recv_cb_request_add_contact(kad_uv_protocol_t *self, kad_id_t *id, const st
 
         // Add to table.
         kad_table_add_contact(self->table, &sender);
-        kad_info("added caller to contacts: %C\n", &sender);
     }
 }
 
@@ -459,7 +450,7 @@ void recv_cb_request_ping(uv_udp_t *handle, kad_request_t *req, const struct soc
     int      err = uv_udp_send(send_request, handle, &response_buf, 1, addr, send_response_cb);
     if (err < 0)
     {
-        kad_error("recv_cb_request_ping: uv_udp_send failed: %s\n", uv_strerror(err));
+        ERROR("recv_cb_request_ping: uv_udp_send failed: %s\n", uv_strerror(err));
     }
 }
 
@@ -488,7 +479,7 @@ void recv_cb_request_store(uv_udp_t *handle, kad_request_t *req, const struct so
     int      err = uv_udp_send(send_request, handle, &response_buf, 1, addr, send_response_cb);
     if (err < 0)
     {
-        kad_error("recv_cb_request_store: uv_udp_send failed: %s\n", uv_strerror(err));
+        ERROR("recv_cb_request_store: uv_udp_send failed: %s\n", uv_strerror(err));
     }
 }
 
@@ -513,7 +504,7 @@ void recv_cb_request_find_node(uv_udp_t *handle, kad_request_t *req, const struc
     int      err = uv_udp_send(send_request, handle, &response_buf, 1, addr, send_response_cb);
     if (err < 0)
     {
-        kad_error("recv_cb_request_find_node: uv_udp_send failed: %s\n", uv_strerror(err));
+        ERROR("recv_cb_request_find_node: uv_udp_send failed: %s\n", uv_strerror(err));
     }
 }
 
@@ -541,7 +532,7 @@ void recv_cb_request_find_value(uv_udp_t *handle, kad_request_t *req, const stru
     int      err = uv_udp_send(send_request, handle, &response_buf, 1, addr, send_response_cb);
     if (err < 0)
     {
-        kad_error("recv_cb_request_find_value: uv_udp_send failed: %s\n", uv_strerror(err));
+        ERROR("recv_cb_request_find_value: uv_udp_send failed: %s\n", uv_strerror(err));
     }
 }
 
@@ -553,7 +544,7 @@ void recv_cb_response(uv_udp_t *handle, void *parse_data, int request_id)
     int promise_idx = find_promise_index(&self->promises, request_id);
     if (promise_idx < 0)
     {
-        kad_warn("recv_cb_response: cannot find promise with id: %d\n", request_id);
+        WARN("recv_cb_response: cannot find promise with id: %d\n", request_id);
         kad_result_fini(NULL, parse_data);
         return;
     }
@@ -565,7 +556,7 @@ void recv_cb_response(uv_udp_t *handle, void *parse_data, int request_id)
     kad_result_t result;
     if (!kad_payload_parse_result(parse_data, request_type, &result))
     {
-        kad_warn("recv_cb_response: failed to parse result\n");
+        WARN("recv_cb_response: failed to parse result\n");
         kad_result_fini(NULL, parse_data);
         return;
     }
@@ -586,7 +577,7 @@ void request_timeout_resolve_promise(kad_promise_list_t *promises, int request_i
     int promise_idx = find_promise_index(promises, request_id);
     if (promise_idx < 0)
     {
-        kad_warn("request_timeout_resolve_promise: cannot find promise with id: %d\n", request_id);
+        WARN("request_timeout_resolve_promise: cannot find promise with id: %d\n", request_id);
         return;
     }
 
@@ -624,14 +615,14 @@ void request_timeout_start(send_context_t *context)
     int ret;
     if ((ret = uv_timer_init(context->self->loop, timeout)) < 0)
     {
-        kad_error("request_timeout_start: uv_timer_init failed: %s\n", uv_strerror(ret));
+        ERROR("request_timeout_start: uv_timer_init failed: %s\n", uv_strerror(ret));
         request_timeout_resolve_promise(timeout_context->promises, timeout_context->request_id);
         return;
     }
 
     if ((ret = uv_timer_start(timeout, request_timeout_cb, 5000, 0)) < 0)
     {
-        kad_error("request_timeout_start: uv_timer_init failed: %s\n", uv_strerror(ret));
+        ERROR("request_timeout_start: uv_timer_init failed: %s\n", uv_strerror(ret));
         request_timeout_resolve_promise(timeout_context->promises, timeout_context->request_id);
         return;
     }

@@ -1,5 +1,5 @@
 #include "cJSON.h"
-#include "log.h"
+#include "logging.h"
 #include "protocol.h"
 #include "rpc.h"
 #include <munit.h>

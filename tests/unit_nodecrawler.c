@@ -1,5 +1,5 @@
 #include "crawlers/nodecrawler.h"
-#include "log.h"
+#include "logging.h"
 #include "protocol.h"
 #include "table.h"
 #include <munit.h>
@@ -35,7 +35,7 @@ MunitResult unit_nodecrawler_find(const MunitParameter params[], void *data)
         protocols[i] = (kad_protocol_t *)(protocol);
         kad_uv_protocol_start(protocol, "0.0.0.0", ports[i]);
 
-        kad_debug("table %d (%U) listening on port %d\n", i, &tables[i].id, ports[i]);
+        DEBUG("Table %d listening on port %d", i, ports[i]);
     }
 
     for (int i = 1; i < NCLIENTS; i++)

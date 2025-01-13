@@ -1,3 +1,4 @@
+#include "logging.h"
 #include <munit.h>
 
 extern MunitTest unit_bucket_tests[];
@@ -33,5 +34,7 @@ static MunitSuite suite = {
 
 int main(int argc, char **argv)
 {
+    kad_logging_set_file(fopen("test.log", "w"));
+    kad_logging_set_level(KAD_LL_DEBUG);
     return munit_suite_main(&suite, NULL, argc, argv);
 }

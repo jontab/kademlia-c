@@ -1,5 +1,5 @@
 #include "client.h"
-#include "log.h"
+#include "logging.h"
 #include <munit.h>
 
 typedef struct unit_insert_context_s unit_insert_context_t;
@@ -31,13 +31,13 @@ MunitResult unit_client_insert(const MunitParameter params[], void *data)
     kad_client_init(&c.client_1, uv_default_loop(), "0.0.0.0", c.port_1);
     kad_client_init(&c.client_2, uv_default_loop(), "0.0.0.0", c.port_2);
 
-    kad_info("client 1 is %U @ %d\n", c.client_1.id, c.port_1);
-    kad_info("client 2 is %U @ %d\n", c.client_2.id, c.port_2);
+    INFO("client 1 is %U @ %d", c.client_1.id, c.port_1);
+    INFO("client 2 is %U @ %d", c.client_2.id, c.port_2);
 
     kad_client_start(&c.client_1);
     kad_client_start(&c.client_2);
 
-    kad_info("starting first bootstrap\n");
+    INFO("Starting first bootstrap");
     const char *hosts[] = {c.host_2};
     kad_client_bootstrap(&c.client_1, hosts, &c.port_2, 1, unit_client_insert_bootstrap_1, &c);
 
@@ -59,14 +59,14 @@ MunitTest unit_client_tests[] = {
 
 void unit_client_insert_bootstrap_1(void *user)
 {
-    kad_info("starting insert operation\n");
+    INFO("Starting insert operation");
     unit_insert_context_t *c = (unit_insert_context_t *)(user);
     kad_client_insert(&c->client_1, "key", "value", unit_client_insert_callback, c);
 }
 
 void unit_client_insert_callback(void *user)
 {
-    kad_info("starting lookup operation\n");
+    INFO("Starting lookup operation");
     unit_insert_context_t *c = (unit_insert_context_t *)(user);
     kad_client_lookup(&c->client_1, "key", unit_client_insert_lookup_callback, c);
 }

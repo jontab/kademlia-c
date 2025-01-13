@@ -1,5 +1,5 @@
 #include "bucket.h"
-#include "log.h"
+#include "logging.h"
 #include <munit.h>
 
 #define MIN(A, B) (((A) < (B)) ? (A) : (B))

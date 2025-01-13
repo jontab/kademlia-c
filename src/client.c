@@ -2,7 +2,8 @@
 #include "alloc.h"
 #include "crawlers/nodecrawler.h"
 #include "crawlers/valuecrawler.h"
-#include "log.h"
+#include "logging.h"
+#include "logging.h"
 
 #define DEFAULT_ALPHA 8
 
@@ -96,13 +97,13 @@ void kad_client_start(kad_client_t *self)
 {
     kad_uv_protocol_start(self->protocol, self->host, self->port);
     kad_client_schedule_refresh(self);
-    kad_info("listening on %s:%d\n", self->host, self->port);
+    INFO("Listening on %s:%d", self->host, self->port);
 }
 
 void kad_client_bootstrap(kad_client_t *self, const char **hosts, int *ports, int size, bootstrap_then_t then,
                           void *user)
 {
-    kad_info("bootstrapping with %d address\n", size);
+    INFO("Bootstrapping: with %d addresses", size);
     if (size == 0)
     {
         then(user);
@@ -116,7 +117,7 @@ void kad_client_bootstrap(kad_client_t *self, const char **hosts, int *ports, in
     {
         const char *contact_host = hosts[contact_i];
         int         contact_port = ports[contact_i];
-        kad_info("sending a ping to %s:%d\n", contact_host, contact_port);
+        INFO("Bootstrapping: pinging %s:%d", contact_host, contact_port);
 
         bootstrap_context_t *context = kad_alloc(1, sizeof(bootstrap_context_t));
         *context = (bootstrap_context_t){
@@ -203,14 +204,13 @@ void kad_client_insert(kad_client_t *self, const char *key, const char *value, i
 
 void kad_client_schedule_refresh(kad_client_t *self)
 {
-    kad_info("scheduling refresh\n");
 }
 
 void kad_client_bootstrap_ping_callback(bool ok, void *result, void *user)
 {
     bootstrap_context_t *context = (bootstrap_context_t *)(user);
     kad_result_t        *result_obj = (kad_result_t *)(result_obj);
-    kad_info("got ping result from %s:%d - ok: %d\n", context->contact_host, context->contact_port, ok);
+    INFO("Bootstrapping: got ping back from %s:%d - ok: %d", context->contact_host, context->contact_port, ok);
     if (ok)
     {
         (*context->contacts_size)++;
@@ -227,7 +227,7 @@ void kad_client_bootstrap_ping_callback(bool ok, void *result, void *user)
     if (*context->bootstrap_result_count == context->bootstrap_size)
     {
         // We've received results from all of the nodes.
-        kad_info("finished pinging bootstrap nodes\n");
+        INFO("Bootstrapping: finished pinging");
         kad_client_bootstrap_process_results(context);
         if (context->contacts)
         {
@@ -253,7 +253,7 @@ void kad_client_bootstrap_process_results(bootstrap_context_t *context)
     }
 
     // Add neighbors to table.
-    kad_info("issuing search for neighbor nodes\n");
+    INFO("Bootstrapping: searching for neighbors");
     kad_nodecrawlerargs_t args = {
         .id = table->id,
         .proto = (kad_protocol_t *)(context->self->protocol),
@@ -272,7 +272,7 @@ void kad_client_bootstrap_crawler_callback(const kad_contact_t *contacts, int co
 {
     bootstrap_context_t *context = (bootstrap_context_t *)(user);
     kad_table_t         *table = &context->self->table;
-    kad_info("adding %d neighbors to table\n", contacts_size);
+    INFO("Found %d neighbors", contacts_size);
 
     // Add neighbors to table.
     for (int i = 0; i < contacts_size; i++)
@@ -316,12 +316,12 @@ void kad_client_insert_callback(const kad_contact_t *contacts, int contacts_size
         kad_contact_t *contact = &insert_into.data[i];
         if (kad_uint256_cmp(&contact->id, &context->self->id) == 0)
         {
-            kad_debug("inserting into ourselves\n");
+            DEBUG("Inserting key into ourselves");
             kad_storage_put(&context->self->storage, context->key, context->value);
         }
         else
         {
-            kad_debug("inserting into another node\n");
+            DEBUG("Inserting key into another node");
             kad_client_t   *self = context->self;
             kad_protocol_t *protocol = (kad_protocol_t *)(self->protocol);
 

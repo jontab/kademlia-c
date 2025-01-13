@@ -1,7 +1,7 @@
 #include "rpc.h"
 #include "alloc.h"
 #include "cJSON.h"
-#include "log.h"
+#include "logging.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -349,7 +349,7 @@ bool kad_payload_request_id(void *data, int *request_id)
     parse_context_t *context = (parse_context_t *)(data);
     if (!context->p_request_id || !cJSON_IsNumber(context->p_request_id))
     {
-        kad_warn("kad_payload_request_id: id is not a number\n");
+        WARN("kad_payload_request_id: id is not a number\n");
         return false;
     }
 
@@ -364,13 +364,13 @@ bool kad_payload_parse_request(void *data, kad_request_t *out)
     cJSON           *p_params = context->p_params;
     if (!p_method || !cJSON_IsString(p_method))
     {
-        kad_warn("payload_parse_request: method is not a string\n");
+        WARN("payload_parse_request: method is not a string\n");
         return false;
     }
 
     if (!p_params || !cJSON_IsArray(p_params))
     {
-        kad_warn("payload_parse_request: params is not an array\n");
+        WARN("payload_parse_request: params is not an array\n");
         return false;
     }
 
@@ -380,14 +380,14 @@ bool kad_payload_parse_request(void *data, kad_request_t *out)
         cJSON *p_sender_id = cJSON_GetArrayItem(p_params, 0);
         if (!p_sender_id || !cJSON_IsString(p_sender_id))
         {
-            kad_warn("payload_parse_request: sender_id is not a string\n");
+            WARN("payload_parse_request: sender_id is not a string\n");
             return false;
         }
 
         char *s_sender_id = cJSON_GetStringValue(p_sender_id);
         if (!kad_id_deserialize(s_sender_id, &out->d.ping.id))
         {
-            kad_warn("payload_parse_request: failed to parse sender_id\n");
+            WARN("payload_parse_request: failed to parse sender_id\n");
             return false;
         }
 
@@ -402,26 +402,26 @@ bool kad_payload_parse_request(void *data, kad_request_t *out)
         cJSON *p_value = cJSON_GetArrayItem(p_params, 2);
         if (!p_sender_id || !cJSON_IsString(p_sender_id))
         {
-            kad_warn("payload_parse_request: sender_id is not a string\n");
+            WARN("payload_parse_request: sender_id is not a string\n");
             return false;
         }
 
         if (!p_key || !cJSON_IsString(p_key))
         {
-            kad_warn("payload_parse_request: key is not a string\n");
+            WARN("payload_parse_request: key is not a string\n");
             return false;
         }
 
         if (!p_value || !cJSON_IsString(p_value))
         {
-            kad_warn("payload_parse_request: value is not a string\n");
+            WARN("payload_parse_request: value is not a string\n");
             return false;
         }
 
         char *s_sender_id = cJSON_GetStringValue(p_sender_id);
         if (!kad_id_deserialize(s_sender_id, &out->d.store.id))
         {
-            kad_warn("payload_parse_request: failed to parse sender_id\n");
+            WARN("payload_parse_request: failed to parse sender_id\n");
             return false;
         }
 
@@ -439,27 +439,27 @@ bool kad_payload_parse_request(void *data, kad_request_t *out)
         cJSON *p_target_id = cJSON_GetArrayItem(p_params, 1);
         if (!p_sender_id || !cJSON_IsString(p_sender_id))
         {
-            kad_warn("payload_parse_request: sender_id is not a string\n");
+            WARN("payload_parse_request: sender_id is not a string\n");
             return false;
         }
 
         if (!p_target_id || !cJSON_IsString(p_target_id))
         {
-            kad_warn("payload_parse_request: target_id is not a string\n");
+            WARN("payload_parse_request: target_id is not a string\n");
             return false;
         }
 
         char *s_sender_id = cJSON_GetStringValue(p_sender_id);
         if (!kad_id_deserialize(s_sender_id, &out->d.find_node.id))
         {
-            kad_warn("payload_parse_request: failed to parse sender_id\n");
+            WARN("payload_parse_request: failed to parse sender_id\n");
             return false;
         }
 
         char *s_target_id = cJSON_GetStringValue(p_target_id);
         if (!kad_id_deserialize(s_target_id, &out->d.find_node.target_id))
         {
-            kad_warn("payload_parse_request: failed to parse target_id\n");
+            WARN("payload_parse_request: failed to parse target_id\n");
             return false;
         }
 
@@ -473,20 +473,20 @@ bool kad_payload_parse_request(void *data, kad_request_t *out)
         cJSON *p_key = cJSON_GetArrayItem(p_params, 1);
         if (!p_sender_id || !cJSON_IsString(p_sender_id))
         {
-            kad_warn("payload_parse_request: sender_id is not a string\n");
+            WARN("payload_parse_request: sender_id is not a string\n");
             return false;
         }
 
         if (!p_key || !cJSON_IsString(p_key))
         {
-            kad_warn("payload_parse_request: key is not a string\n");
+            WARN("payload_parse_request: key is not a string\n");
             return false;
         }
 
         char *s_sender_id = cJSON_GetStringValue(p_sender_id);
         if (!kad_id_deserialize(s_sender_id, &out->d.find_node.id))
         {
-            kad_warn("payload_parse_request: failed to parse sender_id\n");
+            WARN("payload_parse_request: failed to parse sender_id\n");
             return false;
         }
 
@@ -504,25 +504,23 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
     parse_context_t *context = (parse_context_t *)(data);
     if (!context->p_result)
     {
-        kad_warn("kad_payload_parse_result: missing result\n");
+        WARN("kad_payload_parse_result: missing result\n");
         return false;
     }
-
-    kad_debug("parsing %s\n", cJSON_PrintUnformatted(context->monitor));
 
     switch (type)
     {
     case KAD_PING: {
         if (!cJSON_IsString(context->p_result))
         {
-            kad_warn("kad_payload_parse_result: ping: result is not a string\n");
+            WARN("kad_payload_parse_result: ping: result is not a string\n");
             return false;
         }
 
         char *s_server_id = cJSON_GetStringValue(context->p_result);
         if (!kad_id_deserialize(s_server_id, &out->d.ping.id))
         {
-            kad_warn("kad_payload_parse_result: ping: failed to parse server_id\n");
+            WARN("kad_payload_parse_result: ping: failed to parse server_id\n");
             return false;
         }
 
@@ -533,7 +531,7 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
     case KAD_FIND_NODE: {
         if (!cJSON_IsArray(context->p_result))
         {
-            kad_warn("kad_payload_parse_result: find_node: result is not an array\n");
+            WARN("kad_payload_parse_result: find_node: result is not an array\n");
             return false;
         }
 
@@ -544,7 +542,7 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
             cJSON *contarray = cJSON_GetArrayItem(context->p_result, i);
             if (!contarray || !cJSON_IsArray(contarray))
             {
-                kad_warn("kad_payload_parse_result: find_node: failed to get array item\n");
+                WARN("kad_payload_parse_result: find_node: failed to get array item\n");
                 free(out->d.find_node.contacts);
                 return false;
             }
@@ -554,21 +552,21 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
             cJSON *p_port = cJSON_GetArrayItem(contarray, 2);
             if (!p_id || !cJSON_IsString(p_id))
             {
-                kad_warn("kad_payload_parse_result: find_node: id is not a string\n");
+                WARN("kad_payload_parse_result: find_node: id is not a string\n");
                 free(out->d.find_node.contacts);
                 return false;
             }
 
             if (!p_host || !cJSON_IsString(p_host))
             {
-                kad_warn("kad_payload_parse_result: find_node: host is not a string\n");
+                WARN("kad_payload_parse_result: find_node: host is not a string\n");
                 free(out->d.find_node.contacts);
                 return false;
             }
 
             if (!p_port || !cJSON_IsNumber(p_port))
             {
-                kad_warn("kad_payload_parse_result: find_node: port is not a number\n");
+                WARN("kad_payload_parse_result: find_node: port is not a number\n");
                 free(out->d.find_node.contacts);
                 return false;
             }
@@ -577,7 +575,7 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
             char *s_host = cJSON_GetStringValue(p_host);
             if (!kad_id_deserialize(s_id, &out->d.find_node.contacts[i].id))
             {
-                kad_warn("kad_payload_parse_result: find_node: failed to deserialize id\n");
+                WARN("kad_payload_parse_result: find_node: failed to deserialize id\n");
                 free(out->d.find_node.contacts);
                 return false;
             }
@@ -591,7 +589,7 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
     case KAD_FIND_VALUE: {
         if (!cJSON_IsObject(context->p_result))
         {
-            kad_warn("kad_payload_parse_result: find_value: result is not an object\n");
+            WARN("kad_payload_parse_result: find_value: result is not an object\n");
             return false;
         }
 
@@ -599,13 +597,13 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
         cJSON *p_contacts = cJSON_GetObjectItem(context->p_result, "contacts");
         if (!p_value || !(cJSON_IsNull(p_value) || cJSON_IsString(p_value)))
         {
-            kad_warn("kad_payload_parse_result: find_value: value is neither null nor string\n");
+            WARN("kad_payload_parse_result: find_value: value is neither null nor string\n");
             return false;
         }
 
         if (!p_contacts || !cJSON_IsArray(p_contacts))
         {
-            kad_warn("kad_payload_parse_result: find_value: contacts is not an array\n");
+            WARN("kad_payload_parse_result: find_value: contacts is not an array\n");
             return false;
         }
 
@@ -616,7 +614,7 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
             cJSON *contarray = cJSON_GetArrayItem(p_contacts, i);
             if (!contarray || !cJSON_IsArray(contarray))
             {
-                kad_warn("kad_payload_parse_result: find_value: failed to get array item\n");
+                WARN("kad_payload_parse_result: find_value: failed to get array item\n");
                 free(out->d.find_value.contacts);
                 return false;
             }
@@ -626,21 +624,21 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
             cJSON *p_port = cJSON_GetArrayItem(contarray, 2);
             if (!p_id || !cJSON_IsString(p_id))
             {
-                kad_warn("kad_payload_parse_result: find_value: id is not a string\n");
+                WARN("kad_payload_parse_result: find_value: id is not a string\n");
                 free(out->d.find_value.contacts);
                 return false;
             }
 
             if (!p_host || !cJSON_IsString(p_host))
             {
-                kad_warn("kad_payload_parse_result: find_value: host is not a string\n");
+                WARN("kad_payload_parse_result: find_value: host is not a string\n");
                 free(out->d.find_value.contacts);
                 return false;
             }
 
             if (!p_port || !cJSON_IsNumber(p_port))
             {
-                kad_warn("kad_payload_parse_result: find_value: port is not a number\n");
+                WARN("kad_payload_parse_result: find_value: port is not a number\n");
                 free(out->d.find_value.contacts);
                 return false;
             }
@@ -649,7 +647,7 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
             char *s_host = cJSON_GetStringValue(p_host);
             if (!kad_id_deserialize(s_id, &out->d.find_value.contacts[i].id))
             {
-                kad_warn("kad_payload_parse_result: find_value: failed to deserialize id\n");
+                WARN("kad_payload_parse_result: find_value: failed to deserialize id\n");
                 free(out->d.find_value.contacts);
                 return false;
             }
@@ -668,7 +666,7 @@ bool kad_payload_parse_result(void *data, int type, kad_result_t *out)
         break;
     }
     default:
-        kad_warn("kad_payload_parse_result: unhandled type: %d\n", type);
+        WARN("kad_payload_parse_result: unhandled type: %d\n", type);
         break;
     }
 
@@ -694,7 +692,7 @@ void kad_request_fini(kad_request_t *s, void *data)
             free(s->d.find_value.key);
             break;
         default:
-            kad_warn("kad_request_fini: unhandled type: %d\n", s->type);
+            WARN("kad_request_fini: unhandled type: %d\n", s->type);
             break;
         }
     }

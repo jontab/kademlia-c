@@ -1,6 +1,6 @@
 #include "storage.h"
 #include "alloc.h"
-#include "log.h"
+#include "logging.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -45,13 +45,13 @@ const char *kad_storage_lookup(kad_storage_t *self, const char *key)
         curr = curr->next;
     }
 
-    kad_info("storage[%s] is %s\n", key, result);
+    INFO("storage[%s] is %s", key, result);
     return result;
 }
 
 void kad_storage_put(kad_storage_t *self, const char *key, const char *value)
 {
-    kad_info("storage[%s] = %s\n", key, value);
+    INFO("storage[%s] = %s", key, value);
     kad_storagenode_t *node = kad_storagenode_new(key, value);
     if (self->tail)
     {

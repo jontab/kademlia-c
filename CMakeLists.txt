@@ -13,7 +13,7 @@ set(LIBKADEMLIA_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cJSON.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/client.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/contact.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/log.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/logging.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/storage.c
@@ -33,7 +33,7 @@ set(LIBKADEMLIA_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cJSON.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/client.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/contact.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/log.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/logging.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/protocol.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rpc.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/storage.h
@@ -81,5 +81,4 @@ target_link_libraries(kademlia-tests
 
 target_compile_options(kademlia-tests PUBLIC
     -O0
-    -g
-    -DKADEMLIA_NDEBUG)
+    -g)
